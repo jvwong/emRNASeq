@@ -1,0 +1,7 @@
+.Rproj.user
+.Rhistory
+.RData
+gdc*
+!*.R
+GDCData
+.DS_Store
