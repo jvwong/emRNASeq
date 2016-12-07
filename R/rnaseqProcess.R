@@ -64,7 +64,7 @@ make_ranks <- function(bh_adjusted_tt, filepath = "."){
 
   rank_values <- sign(bh_adjusted_tt$table$logFC) * (-1) * log10(bh_adjusted_tt$table$PValue)
   rank_values_max <- max(rank_values[ rank_values != Inf ])
-  rank_values_unique <- sapply( rank_values, function(x) replace(x, is.infinite(x), (rank_values_max + runif(1))) )
+  rank_values_unique <- sapply( rank_values, function(x) replace(x, is.infinite(x), sign(x) * (rank_values_max + runif(1))) )
   genenames <- noquote(rownames(bh_adjusted_tt$table))
 
   ranks_df <- data.frame(gene=genenames,
