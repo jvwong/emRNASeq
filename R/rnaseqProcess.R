@@ -65,9 +65,11 @@ make_ranks <- function(bh_adjusted_tt, filepath = "."){
   rank_values <- sign(bh_adjusted_tt$table$logFC) * (-1) * log10(bh_adjusted_tt$table$PValue)
   rank_values_max <- max(rank_values[ rank_values != Inf ])
   rank_values_unique <- sapply( rank_values, function(x) replace(x, is.infinite(x), (rank_values_max + runif(1))) )
-  genenames <- rownames(bh_adjusted_tt$table)
+  genenames <- noquote(rownames(bh_adjusted_tt$table))
 
-  ranks_df <- data.frame(gene=genenames, rank=rank_values_unique)
+  ranks_df <- data.frame(gene=genenames,
+    rank=rank_values_unique,
+    stringsAsFactors = FALSE)
   ordered_ranks_df <- ranks_df[order(ranks_df[,2], decreasing = TRUE), ]
 
   writeToTabbed(ordered_ranks_df, file.path(filepath, fname))
@@ -82,7 +84,7 @@ make_ranks <- function(bh_adjusted_tt, filepath = "."){
 #'
 #' @export
 make_expression <- function(normalized_dge, filepath = "."){
-  if(!file.exists(filepath)) stop('invalid id/directory')
+  if(!file.exists(file.path(filepath))) stop('invalid id/directory')
   fname = "rnaseq_expression.txt"
 
   cpm_mat <- cpm(normalized_dge, normalized.lib.size=TRUE)
@@ -107,7 +109,7 @@ make_expression <- function(normalized_dge, filepath = "."){
 #'
 #' @export
 make_class <- function(filtered_dge, bh_adjusted_tt, filepath = "."){
-  if(!file.exists(filepath)) stop('invalid id/directory')
+  if(!file.exists(file.path(filepath))) stop('invalid id/directory')
   fname = "rnaseq_classes.cls"
 
   n_samples <- dim(filtered_dge)[2]
@@ -128,6 +130,7 @@ writeToTabbed <- function(o, pathname){
     file = pathname,
     append = FALSE,
     sep = "\t",
+    quote = FALSE,
     row.names = FALSE,
     col.names = TRUE)
 }

@@ -39,5 +39,5 @@ test_that("make_expression rejects an invalid path", {
 
 ### make_class
 test_that("make_class rejects an invalid path", {
-  expect_error(emRNASeq::make_class(processed$filtered_dge, processed$bh_adjusted_tt, file.path(getwd(), "garbage")))
+  expect_error(emRNASeq::make_class(processed$filtered_dge, processed$bh_adjusted_tt, filepath = file.path(getwd(), "garbage")))
 })
