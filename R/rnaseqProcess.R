@@ -82,6 +82,8 @@ make_ranks <- function(bh_adjusted_tt, filepath = "."){
 #' @param normalized_dge A \code{\link[edgeR]{DGEList}}
 #' @param filepath a string indicating a valid local path.
 #'
+#' @import edgeR
+#'
 #' @export
 make_expression <- function(normalized_dge, filepath = "."){
   if(!file.exists(file.path(filepath))) stop('invalid id/directory')
