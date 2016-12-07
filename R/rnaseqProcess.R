@@ -50,30 +50,34 @@ process_rseq <- function(raw_se, comparison){
 
 #' Generate text file content for genes ranked by a funtion of p-value for differential expression
 #'
-#' Creates a file conforming to \href{http://software.broadinstitute.org/cancer/software/gsea/wiki/index.php/Data_formats#TXT:_Text_file_format_for_expression_dataset_.28.2A.txt.29}{GSEA's text file format for an expression dataset}.
+#' Creates content conforming to \href{http://software.broadinstitute.org/cancer/software/gsea/wiki/index.php/Data_formats#RNK:_Ranked_list_file_format_.28.2A.rnk.29}{GSEA's text file format for a ranked list file (.rnk)}. The column header names are arbitrary. The gene rank is based on: sign of log fold-change * -log of p-value for DE. Writes data relative to getwd().
 #'
-#' @param se A \code{\link[SummarizedExperiment]{SummarizedExperiment}}
-#'
-#' @importClassesFrom SummarizedExperiment SummarizedExperiment
+#' @param bh_adjusted_tt This is the \code{\link[edgeR]{TopTags}} object emerging from \code{\link{process_rseq}}
+#' @param filepath a string indicating a valid local path.
 #'
 #' @export
-make_ranks_data <- function(pathname = "expression.txt", se){
-  a <- SummarizedExperiment::assays(se)$counts
-  b <- cbind(NAME=rownames(a), DESCRIPTION=rownames(a), a[,1:ncol(a)])
+make_ranks_data <- function(bh_adjusted_tt, filepath = "."){
+  if(!file.exists(filepath)) stop('invalid id/directory')
+  fname = "rnaseq_de_ranks.rnk"
 
-  ####this should be filtered and so part of the RNA seq analysis pipleline.
+  rank_values <- sign(bh_adjusted_tt$table$logFC) * (-1) * log10(bh_adjusted_tt$table$PValue)
+  genenames <- rownames(bh_adjusted_tt$table)
+
+  ranks_df <- data.frame(gene=genenames, rank=rank_values)
+  ordered_ranks_df <- ranks_df[order(ranks_df[,2], decreasing = TRUE), ]
+
+  writeToTabbed(ordered_ranks_df, file.path(filepath, fname))
 }
 
 #' Generate an expression text file content
 #'
-#' Creates a file conforming to \href{http://software.broadinstitute.org/cancer/software/gsea/wiki/index.php/Data_formats#TXT:_Text_file_format_for_expression_dataset_.28.2A.txt.29}{GSEA's text file format for an expression dataset}.
+#' Creates a content conforming to \href{http://software.broadinstitute.org/cancer/software/gsea/wiki/index.php/Data_formats#TXT:_Text_file_format_for_expression_dataset_.28.2A.txt.29}{GSEA's text file format for an expression dataset}. Writes data relative to getwd().
 #'
 #' @param se A \code{\link[SummarizedExperiment]{SummarizedExperiment}}
-#'
-#' @importClassesFrom SummarizedExperiment SummarizedExperiment
+#' @param filepath a string indicating a valid local path.
 #'
 #' @export
-make_expression_data <- function(pathname = "expression.txt", se){
+make_expression_data <- function(se, filepath = "."){
   a <- SummarizedExperiment::assays(se)$counts
   b <- cbind(NAME=rownames(a), DESCRIPTION=rownames(a), a[,1:ncol(a)])
 
@@ -82,10 +86,10 @@ make_expression_data <- function(pathname = "expression.txt", se){
 
 #' Generate categorical class text file content
 #'
-#' Creates a file conforming to \href{http://software.broadinstitute.org/cancer/software/gsea/wiki/index.php/Data_formats#CLS:_Categorical_.28e.g_tumor_vs_normal.29_class_file_format_.28.2A.cls.29}{GSEA's text file format for discrete classes}
+#' Creates content conforming to \href{http://software.broadinstitute.org/cancer/software/gsea/wiki/index.php/Data_formats#CLS:_Categorical_.28e.g_tumor_vs_normal.29_class_file_format_.28.2A.cls.29}{GSEA's text file format for discrete classes}. Writes data relative to getwd().
 #'
 #' @param se A \code{\link[SummarizedExperiment]{SummarizedExperiment}}
-#' @return a list of 3 row elements; one for each line in the class file
+#' @param filepath a string indicating a valid local path.
 #'
 #' @export
 make_class_data <- function(se){
@@ -94,11 +98,7 @@ make_class_data <- function(se){
   return(lout)
 }
 
-#' Write to a tab-deliminted text file
-#'
-#' If input is a list it writes each element row-wise otherwise it assumes it is
-#' compabtible with a table format
-#'
+#' Helper that writes tab-deliminted text file
 writeToTabbed <- function(o, pathname){
   write.table(o,
     file = pathname,

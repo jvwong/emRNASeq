@@ -3,6 +3,7 @@
 export(create_meta)
 export(make_class_data)
 export(make_expression_data)
+export(make_ranks_data)
 export(merge_data)
 export(process_rseq)
 importClassesFrom(SummarizedExperiment,SummarizedExperiment)

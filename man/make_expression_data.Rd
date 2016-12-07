@@ -10,6 +10,6 @@ make_expression_data(pathname = "expression.txt", se)
 \item{se}{A \code{\link[SummarizedExperiment]{SummarizedExperiment}}}
 }
 \description{
-Creates a file conforming to \href{http://software.broadinstitute.org/cancer/software/gsea/wiki/index.php/Data_formats#TXT:_Text_file_format_for_expression_dataset_.28.2A.txt.29}{GSEA's text file format for an expression dataset}.
+Creates a content conforming to \href{http://software.broadinstitute.org/cancer/software/gsea/wiki/index.php/Data_formats#TXT:_Text_file_format_for_expression_dataset_.28.2A.txt.29}{GSEA's text file format for an expression dataset}.
 }
 

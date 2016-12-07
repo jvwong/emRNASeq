@@ -13,7 +13,7 @@ process_rseq(raw_se, comparison)
 \item{comparison}{A two-element array indicating the 'test' and 'baseline' classes. DE testing  will be performed relative to baseline.}
 }
 \value{
-a list of DGELists: (normalized, adjusted)
+a list of objects including the filtered (filtered_dge) and normalized \code{\link[edgeR]{DGEList}} (tmm_normalized_dge) and the adjusted \code{\link[edgeR]{TopTags}} (bh_adjusted_tt)
 }
 \description{
 Takes in a SummarizedExperiment object containing RNA-seq data and processes
