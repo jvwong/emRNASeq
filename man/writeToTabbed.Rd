@@ -2,12 +2,11 @@
 % Please edit documentation in R/rnaseqProcess.R
 \name{writeToTabbed}
 \alias{writeToTabbed}
-\title{Write to a tab-deliminted text file}
+\title{Helper that writes tab-deliminted text file}
 \usage{
 writeToTabbed(o, pathname)
 }
 \description{
-If input is a list it writes each element row-wise otherwise it assumes it is
-compabtible with a table format
+Helper that writes tab-deliminted text file
 }
 

@@ -25,8 +25,19 @@ test_that("process_rseq returns a TopTags with correct attributes", {
   expect_gt(dim(processed_1$bh_adjusted_tt$table)[1], 1)
 })
 
-### make_ranks_data
-load(file.path("data", "processed_rnaseq.RData"))
-test_that("make_ranks_data rejects an invalid path", {
-  expect_error(emRNASeq::make_ranks_data(processed$bh_adjusted_tt, file.path(getwd(), "garbage")))
+load(file.path("data", "sample_processed_rnaseq.RData"))
+
+### make_ranks
+test_that("make_ranks rejects an invalid path", {
+  expect_error(emRNASeq::make_ranks(processed$bh_adjusted_tt, file.path(getwd(), "garbage")))
+})
+
+### make_expression
+test_that("make_expression rejects an invalid path", {
+  expect_error(emRNASeq::make_expression(processed$tmm_normalized_dge, file.path(getwd(), "garbage")))
+})
+
+### make_class
+test_that("make_class rejects an invalid path", {
+  expect_error(emRNASeq::make_class(processed$filtered_dge, processed$bh_adjusted_tt, file.path(getwd(), "garbage")))
 })
