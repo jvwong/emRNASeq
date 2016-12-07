@@ -10,7 +10,7 @@ process_rseq(raw_se, comparison)
 \arguments{
 \item{raw_se}{A \code{\link[SummarizedExperiment]{SummarizedExperiment}}}
 
-\item{comparison}{A two-element array indicating the 'test' and 'baseline' classes. DE testing  will be performed relative to baseline.}
+\item{comparison}{A two-element array indicating the 'baseline' and 'test' classes IN THAT ORDER. DE testing  will be performed relative to baseline (element 2 vs 1).}
 }
 \value{
 a list of objects including the filtered (filtered_dge) and normalized \code{\link[edgeR]{DGEList}} (tmm_normalized_dge) and the adjusted \code{\link[edgeR]{TopTags}} (bh_adjusted_tt)

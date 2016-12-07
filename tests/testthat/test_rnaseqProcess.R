@@ -3,7 +3,7 @@ library(emRNASeq)
 context("RNA-seq processing")
 
 load(file.path("data", "sample_merged_se.RData"))
-comparison <- c("KO", "WT")
+comparison <- c("WT", "KO")
 processed_1 <- process_rseq(sample_merged, comparison)
 
 ### process_rseq

@@ -5,7 +5,7 @@
 #' it using \code{\link{edgeR}} sequentially: 1. Filtering for low counts (> 10 cpm in some minimum number of samples); 2. Normalization via the Trimmed Mean of M-values method in \code{\link[edgeR]{calcNormFactors}}; 3. Fit using \code{\link[edgeR]{estimateCommonDisp}}  and \code{\link[edgeR]{estimateTagwiseDisp}}; 4. Differential Expression testing via \code{\link[edgeR]{exactTest}};  5. Multiple-testing correction using Benjamini-Hochberge method in \code{\link[edgeR]{topTags}}.
 #'
 #' @param raw_se A \code{\link[SummarizedExperiment]{SummarizedExperiment}}
-#' @param comparison A two-element array indicating the 'test' and 'baseline' classes. DE testing  will be performed relative to baseline.
+#' @param comparison A two-element array indicating the 'baseline' and 'test' classes IN THAT ORDER. DE testing  will be performed relative to baseline (element 2 vs 1).
 #'
 #' @return a list of objects including the filtered (filtered_dge) and normalized \code{\link[edgeR]{DGEList}} (tmm_normalized_dge) and the adjusted \code{\link[edgeR]{TopTags}} (bh_adjusted_tt)
 #'
@@ -35,7 +35,7 @@ process_rseq <- function(raw_se, comparison){
   fitted_tagwise_dge <- edgeR::estimateTagwiseDisp(fitted_commondisp_dge)
 
   de_tested_dge <- edgeR::exactTest(fitted_tagwise_dge,
-    pair = c(comparison[1], comparison[2]))
+    pair = comparison)
 
   bh_adjusted_tt <- edgeR::topTags(de_tested_dge,
     n = nrow(filtered_dge),
@@ -87,7 +87,7 @@ make_expression <- function(normalized_dge, filepath = "."){
   if(!file.exists(file.path(filepath))) stop('invalid id/directory')
   fname = "rnaseq_expression.txt"
 
-  cpm_mat <- cpm(normalized_dge, normalized.lib.size=TRUE)
+  cpm_mat <- edgeR::cpm(normalized_dge, normalized.lib.size=TRUE)
 
   meta_df <- data.frame(
     NAME = rownames(cpm_mat),
