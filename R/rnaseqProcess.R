@@ -5,6 +5,7 @@
 #' @param raw_se A \code{\link[SummarizedExperiment]{SummarizedExperiment}}
 #'
 #' @importClassesFrom edgeR DGEList
+#' @importClassesFrom SummarizedExperiment SummarizedExperiment
 #'
 #' @return a \code{\link[edgeR]{DGEList}}
 #'
