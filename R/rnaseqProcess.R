@@ -44,11 +44,9 @@ process_rseq <- function(data_dge, comparison){
   index_test <- data_dge$samples$group == comparison[1]
   index_baseline <- data_dge$samples$group == comparison[2]
 
-  ### is this too strict? even appropriate? pls review.
+  min_count_per_sample <- 0.25
   row_with_mincount <-
-    rowSums(edgeR::cpm(data_dge) > 0.25) >= min(sum(index_baseline), sum(index_test))
-  # filtered_dge <- edgeR::DGEList(counts=data_dge$counts[row_with_mincount, ],
-    # group = data_dge$samples$group)
+    rowSums(edgeR::cpm(data_dge) > min_count_per_sample) >= min(sum(index_baseline), sum(index_test))
   filtered_dge <- data_dge[row_with_mincount, , keep.lib.sizes=FALSE]
 
   tmm_normalized_dge <- edgeR::calcNormFactors(filtered_dge, method = "TMM")
