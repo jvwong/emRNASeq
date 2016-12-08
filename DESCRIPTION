@@ -1,7 +1,7 @@
 Package: emRNASeq
 Type: Package
 Title: Utilities for RNA sequencing analysis
-Version: 0.1
+Version: 0.2
 Date: 2016-11-28
 Authors@R: person("Jeffrey", "Wong", email = "jvwong@outlook.com", role = c("aut", "cre"))
 Maintainer: Jeffrey V. Wong <jvwong@outlook.com>
