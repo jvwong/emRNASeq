@@ -3,12 +3,20 @@ library(emRNASeq)
 context("RNA-seq processing")
 
 load(file.path("data", "sample_merged_se.RData"))
-comparison <- c("WT", "KO")
-processed_1 <- process_rseq(sample_merged, comparison)
+sample_dge <- convert_se_dge(sample_merged_data)
+
+### convert_se_dge
+test_that("convert_se_dge consists of DGEList and TopTags", {
+  expect_error(convert_se_dge())
+  expect_is(sample_dge, "DGEList")
+})
+
 
 ### process_rseq
-test_that("process_rseq consists of DGEList and TopTags", {
-  expect_error(process_rseq(sample_merged, c("WT")))
+comparison <- c("WT", "KO")
+processed_1 <- process_rseq(sample_dge, comparison)
+test_that("process_rseq requires two classes", {
+  expect_error(process_rseq(sample_dge, c("WT")))
 })
 
 test_that("process_rseq consists of DGEList and TopTags", {
@@ -25,7 +33,7 @@ test_that("process_rseq returns a TopTags with correct attributes", {
   expect_gt(dim(processed_1$bh_adjusted_tt$table)[1], 1)
 })
 
-load(file.path("data", "sample_processed_rnaseq.RData"))
+load(file.path("data", "sample_rnaseq_processed.RData"))
 
 ### make_ranks
 test_that("make_ranks rejects an invalid path", {
