@@ -35,8 +35,26 @@ test_that("merge_data produes a SummarizedExperiment", {
 })
 
 test_that("merge_data result has data", {
-  expect_equal(dim(SummarizedExperiment::assays(sample_merged_df)$counts), c(24062,6))
+  expect_gt(dim(SummarizedExperiment::assays(sample_merged_df)$counts)[1], 22000)
   expect_equal(dim(SummarizedExperiment::colData(sample_merged_df)), c(6,1))
-  expect_equal(dim(SummarizedExperiment::rowData(sample_merged_df)), c(24062,0))
+  expect_gt(dim(SummarizedExperiment::rowData(sample_merged_df))[1], 22000)
 })
+
+### get_gene_model
+sample_df <- data.frame(sample = c("1", "2", "3"))
+rownames(sample_df) <- c("Tnfrsf4", "Mid1", "Tnfrsf18")
+
+test_that("get_gene_model stops on bad species", {
+  expect_error(emRNASeq::get_gene_model(sample_df, "asd"))
+})
+
+gene_model <- emRNASeq::get_gene_model(sample_df, "mouse")
+
+test_that("get_gene_model produes a GRanges", {
+  expect_is(gene_model, "GRanges")
+})
+
+# test_that("get_gene_model produes some correct data", {
+#   expect_equal(dim(gene_info)[1], length(values))
+# })
 

@@ -12,26 +12,26 @@ test_that("convert_se_dge consists of DGEList and TopTags", {
 })
 
 
-### process_rseq
-comparison <- c("WT", "KO")
-processed_1 <- process_rseq(sample_dge, comparison)
-test_that("process_rseq requires two classes", {
-  expect_error(process_rseq(sample_dge, c("WT")))
-})
-
-test_that("process_rseq consists of DGEList and TopTags", {
-  expect_is(processed_1$filtered_dge, "DGEList")
-  expect_is(processed_1$tmm_normalized_dge, "DGEList")
-  expect_is(processed_1$bh_adjusted_tt, "TopTags")
-})
-
-test_that("process_rseq returns a DGEList with correct counts attribute", {
-  expect_equal(dim(processed_1$tmm_normalized_dge)[2], 6)
-})
-
-test_that("process_rseq returns a TopTags with correct attributes", {
-  expect_gt(dim(processed_1$bh_adjusted_tt$table)[1], 1)
-})
+# ### process_rseq
+# comparison <- c("WT", "KO")
+# processed_1 <- process_rseq(sample_dge, comparison)
+# test_that("process_rseq requires two classes", {
+#   expect_error(process_rseq(sample_dge, c("WT")))
+# })
+#
+# test_that("process_rseq consists of DGEList and TopTags", {
+#   expect_is(processed_1$filtered_dge, "DGEList")
+#   expect_is(processed_1$tmm_normalized_dge, "DGEList")
+#   expect_is(processed_1$bh_adjusted_tt, "TopTags")
+# })
+#
+# test_that("process_rseq returns a DGEList with correct counts attribute", {
+#   expect_equal(dim(processed_1$tmm_normalized_dge)[2], 6)
+# })
+#
+# test_that("process_rseq returns a TopTags with correct attributes", {
+#   expect_gt(dim(processed_1$bh_adjusted_tt$table)[1], 1)
+# })
 
 load(file.path("data", "sample_rnaseq_processed.RData"))
 

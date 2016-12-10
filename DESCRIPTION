@@ -14,7 +14,10 @@ Depends:
     R (>= 3.3.1)
 Imports:
     SummarizedExperiment (>= 1.2.3),
-    edgeR (>= 3.14.0)
+    GenomicRanges (>= 1.26.1),
+    IRanges	(>= 2.8.1),
+    edgeR (>= 3.14.0),
+    biomaRt (>= 2.30.0)
 Suggests:
     testthat
 RoxygenNote: 5.0.1
