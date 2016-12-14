@@ -1,14 +1,14 @@
 library(emRNASeq)
 
 context("RNA-seq processing")
-load(file.path("data", "sample_merged_se.RData"))
+load(file.path("data", "sample_merged_data.RData"))
 
 ### process_rseq
 comparison <- c("WT", "KO")
-processed_1 <- process_rseq(sample_merged_se, comparison)
+processed_1 <- process_rseq(sample_merged_data, comparison)
 
 test_that("process_rseq requires two classes", {
-  expect_error(process_rseq(sample_dge, c("WT")))
+  expect_error(process_rseq(sample_merged_data, c("WT")))
 })
 
 test_that("process_rseq consists of DGEList and TopTags", {

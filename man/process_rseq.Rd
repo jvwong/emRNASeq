@@ -5,10 +5,10 @@
 \title{Perform a pair-wise differential expression analysis on the raw
 RNA-seq data}
 \usage{
-process_rseq(data_se, comparison)
+process_rseq(se, comparison)
 }
 \arguments{
-\item{data_se}{A \code{\link[SummarizedExperiment]{RangedSummarizedExperiment}}}
+\item{se}{A \code{\link[SummarizedExperiment]{RangedSummarizedExperiment}}}
 
 \item{comparison}{A two-element array indicating the 'baseline' and 'test' classes IN THAT ORDER. DE testing  will be performed relative to baseline (element 2 vs 1).}
 }
@@ -17,6 +17,6 @@ a list of objects including the filtered (filtered_dge) and normalized \code{\li
 }
 \description{
 Takes in a \code{\link[SummarizedExperiment]{SummarizedExperiment}} object containing RNA-seq data and processes
-it using \code{\link{edgeR}} sequentially: 1. Filtering for low counts (> 10 cpm in some minimum number of samples); 2. Normalization via the Trimmed Mean of M-values method in \code{\link[edgeR]{calcNormFactors}}; 3. Fit using \code{\link[edgeR]{estimateCommonDisp}}  and \code{\link[edgeR]{estimateTagwiseDisp}}; 4. Differential Expression testing via \code{\link[edgeR]{exactTest}};  5. Multiple-testing correction using Benjamini-Hochberge method in \code{\link[edgeR]{topTags}}.
+it using \code{\link{edgeR}} sequentially: 1. Filtering for low counts (> 1 cpm in a minimum number of samples equal to the smallest group size); 2. Normalization via the Trimmed Mean of M-values method in \code{\link[edgeR]{calcNormFactors}}; 3. Fit using \code{\link[edgeR]{estimateCommonDisp}}  and \code{\link[edgeR]{estimateTagwiseDisp}}; 4. Differential Expression testing via \code{\link[edgeR]{exactTest}};  5. Multiple-testing correction using Benjamini-Hochberge method in \code{\link[edgeR]{topTags}}.
 }
 
