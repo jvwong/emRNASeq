@@ -1,61 +1,44 @@
-#' Convenience function to convert from  \code{\link[SummarizedExperiment]{SummarizedExperiment}} to a \code{\link[edgeR]{DGEList}}
-#'
-#' Takes in a \code{\link[SummarizedExperiment]{SummarizedExperiment}} object containing RNA-seq data and converts to \code{\link[edgeR]{DGEList}}.
-#'
-#' @param raw_se A \code{\link[SummarizedExperiment]{SummarizedExperiment}}
-#'
-#' @return a \code{\link[edgeR]{DGEList}}
-#'
-#' @export
-convert_se_dge <- function(raw_se){
-
-  if(missing(raw_se)) stop("Requires a SummarizedExperiment object")
-
-  raw_dge <- edgeR::DGEList(
-    counts = SummarizedExperiment::assays(raw_se)$counts,
-    group = SummarizedExperiment::colData(raw_se)$class
-  )
-
-  return(raw_dge)
-}
-
-
 #' Perform a pair-wise differential expression analysis on the raw
 #' RNA-seq data
 #'
 #' Takes in a \code{\link[SummarizedExperiment]{SummarizedExperiment}} object containing RNA-seq data and processes
-#' it using \code{\link{edgeR}} sequentially: 1. Filtering for low counts (> 10 cpm in some minimum number of samples); 2. Normalization via the Trimmed Mean of M-values method in \code{\link[edgeR]{calcNormFactors}}; 3. Fit using \code{\link[edgeR]{estimateCommonDisp}}  and \code{\link[edgeR]{estimateTagwiseDisp}}; 4. Differential Expression testing via \code{\link[edgeR]{exactTest}};  5. Multiple-testing correction using Benjamini-Hochberge method in \code{\link[edgeR]{topTags}}.
+#' it using \code{\link{edgeR}} sequentially: 1. Filtering for low counts (> 1 cpm in a minimum number of samples equal to the smallest group size); 2. Normalization via the Trimmed Mean of M-values method in \code{\link[edgeR]{calcNormFactors}}; 3. Fit using \code{\link[edgeR]{estimateCommonDisp}}  and \code{\link[edgeR]{estimateTagwiseDisp}}; 4. Differential Expression testing via \code{\link[edgeR]{exactTest}};  5. Multiple-testing correction using Benjamini-Hochberge method in \code{\link[edgeR]{topTags}}.
 #'
-#' @param raw_dge A \code{\link[edgeR]{DGEList}}
+#' @param se A \code{\link[SummarizedExperiment]{RangedSummarizedExperiment}}
 #' @param comparison A two-element array indicating the 'baseline' and 'test' classes IN THAT ORDER. DE testing  will be performed relative to baseline (element 2 vs 1).
 #'
 #' @return a list of objects including the filtered (filtered_dge) and normalized \code{\link[edgeR]{DGEList}} (tmm_normalized_dge) and the adjusted \code{\link[edgeR]{TopTags}} (bh_adjusted_tt)
 #'
 #' @export
-process_rseq <- function(data_dge, comparison){
+process_rseq <- function(se, comparison){
 
-  if(missing(comparison)){ comparison = levels(factor(data_dge$samples$group)) }
+  if(missing(comparison)){ comparison = levels(SummarizedExperiment::colData(se)$class) }
   if(length(comparison) != 2){ stop("comparison must be length 2") }
-  if(missing(data_dge)){ stop("DGEList required") }
+  if(missing(se)){ stop("SummarizedExperiment parameter missing") }
 
-  copy_data_dge <- data_dge
+  se_counts <- SummarizedExperiment::assays(se)$counts
+  se_genes <- as.data.frame(SummarizedExperiment::rowRanges(se))
+  se_groups <- SummarizedExperiment::colData(se)$class
 
-  index_test <- data_dge$samples$group == comparison[1]
-  index_baseline <- data_dge$samples$group == comparison[2]
+  index_test <- se_groups == comparison[1]
+  index_baseline <- se_groups == comparison[2]
 
   min_count_per_sample <- 1
   row_with_mincount <-
-    rowSums(edgeR::cpm(data_dge) > min_count_per_sample) >= min(sum(index_baseline), sum(index_test))
+    rowSums(edgeR::cpm(se_counts) > min_count_per_sample) >= min(sum(index_baseline), sum(index_test))
 
-  filtered_dge <- data_dge[row_with_mincount, , keep.lib.sizes=FALSE]
+  dge_counts <- se_counts[row_with_mincount,]
+  dge_genes <- se_genes[row_with_mincount,]
+
+  filtered_dge <- edgeR::DGEList(counts = se_counts[row_with_mincount,],
+    group = se_groups)
 
   tmm_normalized_dge <- edgeR::calcNormFactors(filtered_dge, method = "TMM")
 
   fitted_commondisp_dge <- edgeR::estimateCommonDisp(tmm_normalized_dge)
   fitted_tagwise_dge <- edgeR::estimateTagwiseDisp(fitted_commondisp_dge)
 
-  de_tested_dge <- edgeR::exactTest(fitted_tagwise_dge,
-    pair = c(comparison[1], comparison[2]))
+  de_tested_dge <- edgeR::exactTest(fitted_tagwise_dge, pair = comparison)
 
   bh_adjusted_tt <- edgeR::topTags(de_tested_dge,
     n = nrow(filtered_dge),

@@ -5,12 +5,12 @@
 \title{Perform a pair-wise differential expression analysis on the raw
 RNA-seq data}
 \usage{
-process_rseq(data_dge, comparison)
+process_rseq(data_se, comparison)
 }
 \arguments{
-\item{comparison}{A two-element array indicating the 'baseline' and 'test' classes IN THAT ORDER. DE testing  will be performed relative to baseline (element 2 vs 1).}
+\item{data_se}{A \code{\link[SummarizedExperiment]{RangedSummarizedExperiment}}}
 
-\item{raw_dge}{A \code{\link[edgeR]{DGEList}}}
+\item{comparison}{A two-element array indicating the 'baseline' and 'test' classes IN THAT ORDER. DE testing  will be performed relative to baseline (element 2 vs 1).}
 }
 \value{
 a list of objects including the filtered (filtered_dge) and normalized \code{\link[edgeR]{DGEList}} (tmm_normalized_dge) and the adjusted \code{\link[edgeR]{TopTags}} (bh_adjusted_tt)
