@@ -39,7 +39,7 @@ create_meta <- function(meta_file) {
 #' @importClassesFrom SummarizedExperiment SummarizedExperiment
 #'
 #' @export
-merge_data <- function(directory, meta, species = "mouse") {
+merge_data <- function(directory, meta, species) {
 
   if(!file.exists(directory)) stop('directory does not exist')
   if(!is.data.frame(meta)) stop('meta invalid parameter type')

@@ -38,12 +38,15 @@ process_rseq <- function(data_dge, comparison){
   if(length(comparison) != 2){ stop("comparison must be length 2") }
   if(missing(data_dge)){ stop("DGEList required") }
 
+  copy_data_dge <- data_dge
+
   index_test <- data_dge$samples$group == comparison[1]
   index_baseline <- data_dge$samples$group == comparison[2]
 
-  min_count_per_sample <- 0.25
+  min_count_per_sample <- 1
   row_with_mincount <-
     rowSums(edgeR::cpm(data_dge) > min_count_per_sample) >= min(sum(index_baseline), sum(index_test))
+
   filtered_dge <- data_dge[row_with_mincount, , keep.lib.sizes=FALSE]
 
   tmm_normalized_dge <- edgeR::calcNormFactors(filtered_dge, method = "TMM")

@@ -23,7 +23,7 @@ test_that("create_meta creates a correctly formatted data.frame", {
 
 ### merge_data
 sample_merged_df <- emRNASeq::merge_data(file.path(getwd(), "data"),
-  sample_meta_df)
+  sample_meta_df, species = "mouse")
 
 test_that("merge_data requires valid params", {
   expect_error(emRNASeq::merge_data(file.path(getwd(), "garbage"), sample_meta_df))
@@ -41,7 +41,8 @@ test_that("merge_data result has data", {
 })
 
 ### get_gene_model
-sample_df <- data.frame(sample = c("1", "2", "3"))
+values <- c("1", "2", "3")
+sample_df <- data.frame(sample = values)
 rownames(sample_df) <- c("Tnfrsf4", "Mid1", "Tnfrsf18")
 
 test_that("get_gene_model stops on bad species", {
@@ -54,7 +55,7 @@ test_that("get_gene_model produes a GRanges", {
   expect_is(gene_model, "GRanges")
 })
 
-# test_that("get_gene_model produes some correct data", {
-#   expect_equal(dim(gene_info)[1], length(values))
-# })
+test_that("get_gene_model produes some correct data", {
+  expect_equal(length(gene_model), length(values))
+})
 

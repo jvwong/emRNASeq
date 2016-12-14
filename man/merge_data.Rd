@@ -5,12 +5,14 @@
 \title{Merge a collection of HT-Seq RNA Expression files based on a meta
 data data.frame returned from \code{\link{create_meta}}}
 \usage{
-merge_data(directory, meta)
+merge_data(directory, meta, species)
 }
 \arguments{
 \item{directory}{Directory where the data resides}
 
 \item{meta}{A metadata dataframe from \code{\link{create_meta}}}
+
+\item{species}{A character array indicating the species}
 }
 \value{
 A \code{\link[SummarizedExperiment]{SummarizedExperiment}}
