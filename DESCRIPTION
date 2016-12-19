@@ -21,3 +21,9 @@ Imports:
 Suggests:
     testthat
 RoxygenNote: 5.0.1
+Remotes: 
+  bioc::SummarizedExperiment, 
+  bioc::GenomicRanges, 
+  bioc::IRanges, 
+  bioc::edgeR, 
+  bioc::biomaRt 
