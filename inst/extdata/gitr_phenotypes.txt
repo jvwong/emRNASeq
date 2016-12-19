@@ -1,0 +1,1 @@
+id	classSMARTA_GITR_KO_1_htsqct.txt	KOSMARTA_GITR_KO_2_htsqct.txt	KOSMARTA_GITR_KO_3_htsqct.txt	KOSMARTA_GITR_WT_1_htsqct.txt	WTSMARTA_GITR_WT_2_htsqct.txt	WTSMARTA_GITR_WT_3_htsqct.txt	WT
