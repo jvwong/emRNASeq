@@ -35,9 +35,6 @@ create_meta <- function(meta_file) {
 #'
 #' @return A \code{\link[SummarizedExperiment]{SummarizedExperiment}}
 #'
-#' @importFrom tools file_path_sans_ext
-#' @importClassesFrom SummarizedExperiment SummarizedExperiment
-#'
 #' @export
 merge_data <- function(directory, meta, species) {
 

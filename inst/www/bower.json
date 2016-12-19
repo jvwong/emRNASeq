@@ -1,0 +1,22 @@
+{
+  "name": "name",
+  "description": "description",
+  "main": "index.html",
+  "authors": [
+    "author"
+  ],
+  "license": "MIT",
+  "keywords": [],
+  "homepage": "",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "jquery": "^3.1.1",
+    "opencpu.js": "opencpu#*"
+  }
+}
