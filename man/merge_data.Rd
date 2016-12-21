@@ -2,8 +2,11 @@
 % Please edit documentation in R/munge.R
 \name{merge_data}
 \alias{merge_data}
-\title{Merge a collection of HT-Seq RNA Expression files based on a meta
-data data.frame returned from \code{\link{create_meta}}}
+\title{Merge a set of HT-Seq RNA expression files in tab-delimited format with
+two columns and no header. The classes are defined by a meta data file
+which is a tab-delimited text file with headers for the sample read 'id' and
+'class'. Each row entry is a corresponding filename and class assignment.
+Only accepts pair-wise comparison so there must be exactly 2 classes.}
 \usage{
 merge_data(filelist, meta_file, species)
 }
@@ -18,7 +21,10 @@ merge_data(filelist, meta_file, species)
 A \code{\link[SummarizedExperiment]{SummarizedExperiment}}
 }
 \description{
-Merge a collection of HT-Seq RNA Expression files based on a meta
-data data.frame returned from \code{\link{create_meta}}
+Merge a set of HT-Seq RNA expression files in tab-delimited format with
+two columns and no header. The classes are defined by a meta data file
+which is a tab-delimited text file with headers for the sample read 'id' and
+'class'. Each row entry is a corresponding filename and class assignment.
+Only accepts pair-wise comparison so there must be exactly 2 classes.
 }
 

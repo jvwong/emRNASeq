@@ -90,27 +90,28 @@ var shell = (function(){
   };
 
   initListeners = function(){
-    $('#data').change(function(){
-      //arguments
-      var myfiles = $("#data")[0].files;
-      console.log(myfiles);
-      if(!myfiles.length){
-        alert("No file selected.");
-        return;
-      }
-      //perform the request
-      var req = stateMap.ocpu.call('merge_data', {
-        meta : true,
-        species: 'mouse'
-      }, function(session){
-        stateMap.data_session = session;
-        console.log('back!');
-      });
-      //if R returns an error, alert the error message
-      req.fail(function(){
-        alert("Server error: " + req.responseText);
-      });
-    });
+    // $('#data').change(function(){
+    //   //arguments
+    //   var myfiles = $(this)[0].files;
+    //
+    //   if(!myfiles.length){
+    //     alert("No file selected.");
+    //     return;
+    //   }
+    //
+    //   //perform the request
+    //   var req = stateMap.ocpu.call('merge_data', {
+    //     meta : true,
+    //     species: 'mouse'
+    //   }, function(session){
+    //     stateMap.data_session = session;
+    //     console.log('back!');
+    //   });
+    //   //if R returns an error, alert the error message
+    //   req.fail(function(){
+    //     alert("Server error: " + req.responseText);
+    //   });
+    // });
 
     $('#metadata').change(function(){
       //arguments
