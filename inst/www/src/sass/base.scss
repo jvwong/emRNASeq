@@ -16,7 +16,10 @@
   Sass code that doesn't cause Sass to actually output CSS.
   Mixin declarations, functions, and variables.
 */
-@import "modules/fonts";
-@import "modules/colors";
 
-@import "base";
+#ajax-spinner{
+  position: absolute;
+  z-index: 2;
+  top: 25%;
+  left: 50%;
+}

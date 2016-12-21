@@ -23,17 +23,17 @@ var shell = (function(){
               '</div>' +
               '<div class="form-group" id="em-munge-data">' +
                 '<label class="btn btn-primary btn-file" for="em-munge-data-input">Data</label>' +
-                '<input type="file" style="display: none;" id="em-munge-data-input">' +
+                '<input type="file" style="display: none;" id="em-munge-data-input" multiple>' +
+                '<p class="help-block"></p>' +
               '</div>' +
-              '<button type="submit" class="btn btn-primary" id="em-munge-submit">Submit</button>' +
             '</form>' +
           '</div>' +
 
           '<hr/>' +
 
           '<div class="em-section">' +
-            '<h2>Outputs</h2>' +
-            '<div class="row" id="em-munge-results"></div>' +
+            '<div class="row" id="em-munge-meta-results"></div>' +
+            '<div class="row" id="em-munge-data-results"></div>' +
           '</div>' +
 
         '</div>' +
@@ -44,19 +44,23 @@ var shell = (function(){
        '<thead>' +
          '<tr></tr>' +
        '</thead>' +
-     '</table>' +
-     '<hr/>'
+     '</table>',
+
+     code_template : String() +
+      '<pre class="em-code"></pre>'
   },
   stateMap = {
     ocpu                : undefined,
     metadata            : undefined,
     meta_session        : undefined,
-    data                : undefined
+    data                : undefined,
+    data_session        : undefined
   },
   jqueryMap = {},
   registerListeners,
-  onMetaFileChange,
-  setJQueryMap, displayTable,
+  onMetaFileChange, onDataFilesChange,
+  setJQueryMap,
+  displayAsTable, displayAsPrint,
   initModule;
   // ---------- END MODULE SCOPE VARIABLES -------------------------------------
 
@@ -68,28 +72,25 @@ var shell = (function(){
   // Begin DOM method /setJQueryMap/
   setJQueryMap = function($container){
     jqueryMap = {
-      $container          : $container,
-      $shell              : $container.find('#em-shell'),
-      $munge              : $container.find('#em-shell #em-munge'),
-      $munge_meta_input   : $container.find('#em-shell #em-munge #em-munge-meta input'),
-      $munge_meta_help    : $container.find('#em-shell #em-munge #em-munge-meta .help-block'),
-      $munge_data_input   : $container.find('#em-shell #em-munge #em-munge-data input'),
-      $munge_data_help    : $container.find('#em-shell #em-munge #em-munge-data .help-block'),
-      $munge_submit       : $container.find('#em-shell #em-munge #em-munge-submit'),
-      $munge_results      : $container.find('#em-shell #em-munge #em-munge-results')
+      $container            : $container,
+      $shell                : $container.find('#em-shell'),
+      $munge                : $container.find('#em-shell #em-munge'),
+      $munge_meta_input     : $container.find('#em-shell #em-munge #em-munge-meta input'),
+      $munge_meta_help      : $container.find('#em-shell #em-munge #em-munge-meta .help-block'),
+      $munge_meta_results   : $container.find('#em-shell #em-munge #em-munge-meta-results'),
+      $munge_data_input     : $container.find('#em-shell #em-munge #em-munge-data input'),
+      $munge_data_help      : $container.find('#em-shell #em-munge #em-munge-data .help-block'),
+      $munge_data_results   : $container.find('#em-shell #em-munge #em-munge-data-results')
     };
   };
   // End DOM method /setJQueryMap/
 
-  // Begin DOM method /displayTable/
-  displayTable = function(caption, session, $container){
+  // Begin DOM method /displayAsTable/
+  displayAsTable = function(text, session, $container){
     session.getObject(function(data){
       if(!data.length){ return; }
 
-      var $table = $container.html(configMap.table_template)
-                             .find('table')
-                             .last();
-
+      // Data manipulations
       var keys = Object.keys(data[0]);
       var headers = keys.map(function(v){
         return '<th>' + v + '</th>';
@@ -100,19 +101,34 @@ var shell = (function(){
         };
       });
 
-      $table.prepend('<caption>' + caption + '</caption>');
-
+      // DOM manipulations
+      var $table = $(configMap.table_template);
       if(headers.length){
         $table.find('thead tr').html($(headers.join('')));
       }
-
+      $container.append('<h3>' + text + '</h3>');
+      $container.append($table);
       $table.DataTable({
             "aaData": data,
             "aoColumns": aoColumns
           });
     });
   };
-  // End DOM method /displayTable/
+  // End DOM method /displayAsTable/
+
+  // Begin DOM method /displayAsPrint/
+  displayAsPrint = function(text, session, $container){
+    var url = session.getLoc() + 'R/.val/print';
+    $.get(url, function(data){
+      // DOM manipulations
+      var $code = $(configMap.code_template);
+      $code.html(data);
+      $container.append('<h3>' + text + '</h3>');
+      $container.append($code);
+      $container.append('<a type="button" class="btn btn-success" href="' + session.getLoc() + 'R/.val/rds">Download (.rds)</a>');
+    });
+  };
+  // End DOM method /displayAsPrint/
   // ---------- END DOM METHODS ------------------------------------------------
 
   // ---------- BEGIN EVENT HANDLERS -------------------------------------------
@@ -133,27 +149,70 @@ var shell = (function(){
       meta_file : file
     }, function(session){
       stateMap.meta_session = session;
-      displayTable(file.name,
+      jqueryMap.$munge_meta_results.empty();
+      displayAsTable('Metadata',
         stateMap.meta_session,
-        jqueryMap.$munge_results);
+        jqueryMap.$munge_meta_results);
     });
 
     jqxhr.done(function(){
       //clear any previous help messages
-      jqueryMap.$munge_meta_help.html('');
+      jqueryMap.$munge_meta_help.text(file.name);
     });
 
     jqxhr.fail(function(){
       var errText = "Server error: " + jqxhr.responseText;
       console.error(errText);
-      jqueryMap.$munge_meta_help.html(errText);
+      jqueryMap.$munge_meta_help.text(errText);
     });
   };
   // End event handler /onMetaFileChange/
 
+  // Begin event handler /onDataFilesChange/
+  onDataFilesChange = function(){
+    //arguments
+    var files = $(this)[0].files;
+    if(!files.length){
+      alert('No file(s) selected.');
+      return;
+    }
+
+    if(!stateMap.metadata){
+      alert('Please load metadata.');
+      return;
+    }
+
+    //cache the files in the stateMap
+    stateMap.data = files;
+
+    //perform the request
+    var jqxhr = stateMap.ocpu.call('merge_data', {
+      filelist    : files,
+      meta_file   : stateMap.metadata,
+      species     : 'mouse'
+    }, function(session){
+      stateMap.data_session = session;
+      displayAsPrint('Data details',
+        stateMap.data_session,
+        jqueryMap.$munge_data_results);
+    });
+
+    jqxhr.done(function(){
+      jqueryMap.$munge_data_help.text('Files merged: ' + stateMap.data.length);
+    });
+
+    jqxhr.fail(function(){
+      var errText = "Server error: " + jqxhr.responseText;
+      console.error(errText);
+      jqueryMap.$munge_data_help.text(errText);
+    });
+  };
+  // End event handler /onDataFilesChange/
+
 
   registerListeners = function(){
     jqueryMap.$munge_meta_input.change(onMetaFileChange);
+    jqueryMap.$munge_data_input.change(onDataFilesChange);
   };
   // ---------- END EVENT HANDLERS ---------------------------------------------
 

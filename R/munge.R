@@ -34,20 +34,24 @@ create_meta <- function(meta_file) {
 #' 'class'. Each row entry is a corresponding filename and class assignment.
 #' Only accepts pair-wise comparison so there must be exactly 2 classes.
 #'
-#' @param filelist A list of files
 #' @param meta_file A metadata file
 #' @param species A character array indicating the species
 #'
 #' @return A \code{\link[SummarizedExperiment]{SummarizedExperiment}}
 #'
 #' @export
-merge_data <- function(filelist, meta_file, species) {
+merge_data <- function(meta_file, species, ...) {
 
   if(!is.character(species)) stop('species required')
 
   i <- 0
   class_order <- c()
   meta <- create_meta(meta_file)
+
+  filelist <- list(...)
+  if(is(filelist, "list")){
+    filelist <- unlist(...)
+  }
 
   for(file in filelist){
 

@@ -11,7 +11,7 @@ filelist <- c("/Users/jeffreywong/Projects/PathwayCommons/workflows/packaging/em
   "/Users/jeffreywong/Projects/PathwayCommons/workflows/packaging/emRNASeq/inst/extdata/SMARTA_GITR_WT_2_htsqct.txt",
   "/Users/jeffreywong/Projects/PathwayCommons/workflows/packaging/emRNASeq/inst/extdata/SMARTA_GITR_WT_3_htsqct.txt")
 
-sample_merged_df <- emRNASeq::merge_data(filelist, meta_file, species = "mouse")
+sample_merged_df <- emRNASeq::merge_data(meta_file, species = "mouse", filelist)
 
 test_that("merge_data requires valid params", {
   expect_error(emRNASeq::merge_data(sample_meta_df, NULL))
