@@ -7,6 +7,8 @@
 #'
 #' @param meta_file a path to a tab-delimited metadata file
 #' @return A data frame
+#'
+#' @export
 create_meta <- function(meta_file) {
 
   if(!file.exists(meta_file)) stop('file does not exist')
