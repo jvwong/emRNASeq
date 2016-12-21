@@ -6,88 +6,132 @@ var shell = (function(){
   var
   configMap = {
     template : String() +
-      '<b>File</b> <input type="file" id="csvfile">' +
-      '<br />' +
-      '<b>Header</b> <select id="header">' +
-          '<option>true</option>' +
-          '<option>false</option>' +
-        '</select>' +
-        '<br />' +
-        '<button id="submitbutton" type="button">Upload CSV file!</button>' +
-        '<br>' +
-        '<p>Export the data frame:</p>' +
-        '<ol>' +
-          '<li><a target="_blank" id="rdalink">rdata</a></li>' +
-          '<li><a target="_blank" id="jsonlink">json</a></li>' +
-          '<li><a target="_blank" id="csvlink">csv</a></li>' +
-          '<li><a target="_blank" id="tablink">tab</a></li>' +
-          '<li><a target="_blank" id="printlink">print</a></li>' +
-          '<li><a target="_blank" id="mdlink">markdown</a></li>' +
-        '</ol>' +
-        '<p>' +
-        'This page demonstrates how to upload a file. It works exactly the same as calling a function. We call <code>read.csav</code> so that it will be stored on the server as a data frame.' +
-        '</p>' +
-        '<p>' +
-          '<b>Note that HTML5 is required to upload files!</b> <br />' +
-          'This means that this won\'t work in internet explorer version 9 or lower.' +
-          'You need Firefox, Chrome, Safari or Internet Explorer 10+' +
-        '</p>'
+
+      '<div class="container" id="emrnaseq-container">' +
+        '<div class="section">' +
+          '<h2>Munge</h2>' +
+          '<div class="row">' +
+            '<p>' +
+              'This section demonstrates how to upload RNA-Seq expression metadata.' +
+              'We call <code>create_meta</code> which is stored on the server as a data frame.' +
+              'All files must be tab delimited (.txt).' +
+            '</p>' +
+          '</div>' +
+
+          '<div class="row">' +
+            '<b>Select metadata file</b> <input type="file" id="metadata">' +
+          '</div>' +
+
+          '<div class="row" id="meta-results"></div>' +
+        '</div>' +
+
+        '<div class="section">' +
+          '<h2>Merge</h2>' +
+          '<div class="row">' +
+            '<p>' +
+              'This page demonstrates how to upload RNA-Seq expression data.' +
+              'We call <code>merge_data</code> which is stored on the server as a SummarizedExperiment.' +
+              'All files must be tab delimited (.txt).' +
+            '</p>' +
+          '</div>' +
+
+          '<div class="row">' +
+            '<b>Select files</b> <input type="file" id="data" multiple>' +
+          '</div>' +
+          '<div class="row" id="data-results"></div>' +
+        '</div>' +
+      '</div>',
+
+     meta_table_template : String() +
+       '<table class="table table-striped table-bordered" id="meta-table">' +
+         '<thead>' +
+           '<tr>' +
+               '<th>id</th>' +
+               '<th>class</th>' +
+           '</tr>' +
+         '</thead>' +
+       '</table>'
   },
   stateMap = {
-    ocpu: undefined
+    ocpu: undefined,
+    meta_session: undefined
   },
   jqueryMap = {},
   initListeners,
-  setJQueryMap,
+  setJQueryMap, displayTable,
   init;
 
   // ---------- BEGIN DOM METHODS ----------------------------------------------
   // Begin DOM method /setJQueryMap/
-  setJQueryMap = function(){
-    var $container = stateMap.$container;
+  setJQueryMap = function($container){
     jqueryMap = {
-      $container: $container
+      $container: $container,
+      $metaresults: $container.find('#meta-results')
     };
   };
   // End DOM method /setJQueryMap/
   // ---------- END DOM METHODS ------------------------------------------------
 
+  displayTable = function(session, $container){
+    session.getObject(function(data){
+      if(!data.length){ return; }
+      var keys = Object.keys(data[0]);
+      var aoColumns = keys.map(function(v){
+        return {
+           "mDataProp": v
+        };
+      });
+      $container
+        .DataTable({
+            "aaData": data,
+            "aoColumns": aoColumns
+        });
+    });
+  };
+
   initListeners = function(){
-    $("#submitbutton").on("click", function(){
-
+    $('#data').change(function(){
       //arguments
-      var myheader = $("#header").val() === "true";
-      var myfile = $("#csvfile")[0].files[0];
-
-      if(!myfile){
+      var myfiles = $("#data")[0].files;
+      console.log(myfiles);
+      if(!myfiles.length){
         alert("No file selected.");
         return;
       }
-
-      //disable the button during upload
-      $("#submitbutton").attr("disabled", "disabled");
-
       //perform the request
-      var req = stateMap.ocpu.call("readcsvnew", {
-        file : myfile,
-        header : myheader
+      var req = stateMap.ocpu.call('merge_data', {
+        meta : true,
+        species: 'mouse'
       }, function(session){
-        $("#printlink").attr("href", session.getLoc() + "R/.val/print");
-        $("#rdalink").attr("href", session.getLoc() + "R/.val/rda");
-        $("#csvlink").attr("href", session.getLoc() + "R/.val/csv");
-        $("#tablink").attr("href", session.getLoc() + "R/.val/tab");
-        $("#jsonlink").attr("href", session.getLoc() + "R/.val/json");
-        $("#mdlink").attr("href", session.getLoc() + "R/.val/md");
+        stateMap.data_session = session;
+        console.log('back!');
       });
-
       //if R returns an error, alert the error message
       req.fail(function(){
         alert("Server error: " + req.responseText);
       });
+    });
 
-      //after request complete, re-enable the button
-      req.always(function(){
-        $("#submitbutton").removeAttr("disabled");
+    $('#metadata').change(function(){
+      //arguments
+      var myfile = $("#metadata")[0].files[0];
+      if(!myfile){
+        alert("No file selected.");
+        return;
+      }
+      //perform the request
+      var req = stateMap.ocpu.call("create_meta", {
+        meta_file : myfile
+      }, function(session){
+        stateMap.meta_session = session;
+        var $table = jqueryMap.$metaresults
+                              .html(configMap.meta_table_template)
+                              .find('table#meta-table').last();
+        displayTable(stateMap.meta_session, $table);
+      });
+      //if R returns an error, alert the error message
+      req.fail(function(){
+        alert("Server error: " + req.responseText);
       });
     });
   };
@@ -105,7 +149,7 @@ var shell = (function(){
       stateMap.ocpu.seturl(path);
     }
     $container.html(configMap.template);
-    setJQueryMap();
+    setJQueryMap($container);
     initListeners();
   };
   // ---------- END PUBLIC METHODS --------------------------------------------

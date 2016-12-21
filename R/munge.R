@@ -7,17 +7,17 @@
 #'
 #' @param meta_file a path to a tab-delimited metadata file
 #' @return A data frame
-#'
-#' @export
 create_meta <- function(meta_file) {
 
   if(!file.exists(meta_file)) stop('file does not exist')
+  if(!grepl(".txt$", meta_file)){
+    stop("Uploaded file must be a tab-delimited .txt file!")
+  }
 
   meta <- read.table(meta_file,
     check.names = FALSE,
     colClasses = c("character", "factor"),
-    sep = "\t",
-    header = TRUE)
+    sep = "\t", header=TRUE)
 
   if(!all.equal(colnames(meta), c("id", "class"))) stop('check column headers')
   if(!length(levels(meta$class)) == 2) stop('require 2 classes')
@@ -26,35 +26,41 @@ create_meta <- function(meta_file) {
 }
 
 
-#' Merge a collection of HT-Seq RNA Expression files based on a meta
-#' data data.frame returned from \code{\link{create_meta}}
+#' Merge a set of HT-Seq RNA expression files in tab-delimited format with
+#' two columns and no header. The classes are defined by a meta data file
+#' which is a tab-delimited text file with headers for the sample read 'id' and
+#' 'class'. Each row entry is a corresponding filename and class assignment.
+#' Only accepts pair-wise comparison so there must be exactly 2 classes.
 #'
-#' @param directory Directory where the data resides
-#' @param meta A metadata dataframe from \code{\link{create_meta}}
+#' @param filelist A list of files
+#' @param meta_file A metadata file
 #' @param species A character array indicating the species
 #'
 #' @return A \code{\link[SummarizedExperiment]{SummarizedExperiment}}
 #'
 #' @export
-merge_data <- function(directory, meta, species) {
+merge_data <- function(filelist, meta_file, species) {
 
-  if(!file.exists(directory)) stop('directory does not exist')
-  if(!is.data.frame(meta)) stop('meta invalid parameter type')
+  if(!is.character(species)) stop('species required')
 
   i <- 0
+  class_order <- c()
+  meta <- create_meta(meta_file)
 
-  for(id in meta$id){
+  for(file in filelist){
 
-    filepath <- file.path(directory, id)
-    if(!file.exists(filepath)) stop('invalid id/directory')
+    if(!file.exists(file)) stop('invalid file/directory')
 
-    input_df <- read.table(filepath,
+    fname <- basename(file)
+    class_order <- append(class_order, which(meta$id == fname))
+
+    input_df <- read.table(file,
       check.names = FALSE,
       stringsAsFactors = FALSE,
       row.names = 1,
       sep = "\t",
       header = FALSE)
-    colnames(input_df) <- tools::file_path_sans_ext(id)
+    colnames(input_df) <- tools::file_path_sans_ext(fname)
 
     if (i == 0){
       data_df <- input_df
@@ -63,9 +69,9 @@ merge_data <- function(directory, meta, species) {
     }
 
     data_df <- merge(data_df,
-        input_df,
-        by = "row.names",
-        all = FALSE)
+      input_df,
+      by = "row.names",
+      all = FALSE)
     rownames(data_df) <- data_df$Row.names
     data_df <- subset(data_df, select = -Row.names)
     i = i + 1
@@ -77,7 +83,8 @@ merge_data <- function(directory, meta, species) {
   indices_data_df <- match(common_names, rownames(data_df))
   subsetted_data_df <- data_df[indices_data_df,]
 
-  colData <- data.frame(class=meta$class, row.names=colnames(subsetted_data_df))
+  ### meta$class[class_order,]
+  colData <- data.frame(class=meta[class_order,]$class, row.names=colnames(subsetted_data_df))
 
   data_se <- SummarizedExperiment::SummarizedExperiment(
     assays = list(counts = data.matrix(subsetted_data_df)),

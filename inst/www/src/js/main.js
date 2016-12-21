@@ -5,5 +5,5 @@ var ocpu = require('./lib/opencpu.js');
 
 //init this script when the page has loaded
 (function(){
- shell.init(ocpu, "//127.0.0.1:8080/ocpu/library/emRNASeq/R", $('#emrnaseq'));
+ shell.init(ocpu, "//localhost:8787/ocpu/library/emRNASeq/R", $('#emrnaseq'));
 }());
