@@ -185,12 +185,20 @@ var shell = (function(){
     //cache the files in the stateMap
     stateMap.data = files;
 
-    //perform the request
-    var jqxhr = stateMap.ocpu.call('merge_data', {
-      filelist    : files,
+    // opencpu only accepts single files as arguments
+    var args = {
       meta_file   : stateMap.metadata,
       species     : 'mouse'
-    }, function(session){
+    };
+
+    // loop through files
+    for (var i = 0; i < files.length; i++) {
+        var file = files.item(i);
+        args['file' + i] = file;
+    }
+
+    //perform the request
+    var jqxhr = stateMap.ocpu.call('merge_data', args, function(session){
       stateMap.data_session = session;
       displayAsPrint('Data details',
         stateMap.data_session,

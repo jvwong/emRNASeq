@@ -8,11 +8,9 @@ which is a tab-delimited text file with headers for the sample read 'id' and
 'class'. Each row entry is a corresponding filename and class assignment.
 Only accepts pair-wise comparison so there must be exactly 2 classes.}
 \usage{
-merge_data(filelist, meta_file, species)
+merge_data(meta_file, species, ...)
 }
 \arguments{
-\item{filelist}{A list of files}
-
 \item{meta_file}{A metadata file}
 
 \item{species}{A character array indicating the species}

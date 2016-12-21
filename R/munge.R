@@ -49,8 +49,8 @@ merge_data <- function(meta_file, species, ...) {
   meta <- create_meta(meta_file)
 
   filelist <- list(...)
-  if(is(filelist, "list")){
-    filelist <- unlist(...)
+  if(is.list(filelist)){
+    filelist <- unlist(filelist)
   }
 
   for(file in filelist){
