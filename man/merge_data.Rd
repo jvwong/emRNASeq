@@ -2,27 +2,23 @@
 % Please edit documentation in R/munge.R
 \name{merge_data}
 \alias{merge_data}
-\title{Merge a set of HT-Seq RNA expression files in tab-delimited format with
-two columns and no header. The classes are defined by a meta data file
-which is a tab-delimited text file with headers for the sample read 'id' and
-'class'. Each row entry is a corresponding filename and class assignment.
-Only accepts pair-wise comparison so there must be exactly 2 classes.}
+\title{Merge a set of HT-Seq RNA expression files}
 \usage{
-merge_data(meta_file, species, ...)
+merge_data(meta_file, species = NULL, ...)
 }
 \arguments{
 \item{meta_file}{A metadata file}
 
-\item{species}{A character array indicating the species}
+\item{species}{A character array indicating the species with which to fetch gene models from bioMart, If NULL this mapping will not be performed}
 }
 \value{
 A \code{\link[SummarizedExperiment]{SummarizedExperiment}}
 }
 \description{
-Merge a set of HT-Seq RNA expression files in tab-delimited format with
-two columns and no header. The classes are defined by a meta data file
-which is a tab-delimited text file with headers for the sample read 'id' and
-'class'. Each row entry is a corresponding filename and class assignment.
-Only accepts pair-wise comparison so there must be exactly 2 classes.
+Source files must be in tab-delimited format with two columns and no header.
+The classes are defined by a meta data file which is a tab-delimited text
+file with headers for the sample read 'id' and 'class'. Each row entry
+is a corresponding filename and class assignment. Only accepts pair-wise
+comparison so there must be exactly 2 classes.
 }
 

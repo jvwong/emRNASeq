@@ -28,21 +28,21 @@ create_meta <- function(meta_file) {
 }
 
 
-#' Merge a set of HT-Seq RNA expression files in tab-delimited format with
-#' two columns and no header. The classes are defined by a meta data file
-#' which is a tab-delimited text file with headers for the sample read 'id' and
-#' 'class'. Each row entry is a corresponding filename and class assignment.
-#' Only accepts pair-wise comparison so there must be exactly 2 classes.
+#' Merge a set of HT-Seq RNA expression files
+#'
+#' Source files must be in tab-delimited format with two columns and no header.
+#' The classes are defined by a meta data file which is a tab-delimited text
+#' file with headers for the sample read 'id' and 'class'. Each row entry
+#' is a corresponding filename and class assignment. Only accepts pair-wise
+#' comparison so there must be exactly 2 classes.
 #'
 #' @param meta_file A metadata file
-#' @param species A character array indicating the species
+#' @param species A character array indicating the species with which to fetch gene models from bioMart, If NULL this mapping will not be performed
 #'
 #' @return A \code{\link[SummarizedExperiment]{SummarizedExperiment}}
 #'
 #' @export
-merge_data <- function(meta_file, species, ...) {
-
-  if(!is.character(species)) stop('species required')
+merge_data <- function(meta_file, species = NULL, ...) {
 
   i <- 0
   class_order <- c()
@@ -52,6 +52,8 @@ merge_data <- function(meta_file, species, ...) {
   if(is.list(filelist)){
     filelist <- unlist(filelist)
   }
+
+  if(dim(meta)[1] != length(filelist)) stop('Mismatch in files declared in metadata')
 
   for(file in filelist){
 
@@ -83,19 +85,30 @@ merge_data <- function(meta_file, species, ...) {
     i = i + 1
   }
 
-  gene_model <- get_gene_model(data_df, species)
+  if(!is.null(species)){
 
-  common_names <- intersect(rownames(data_df), names(gene_model))
-  indices_data_df <- match(common_names, rownames(data_df))
-  subsetted_data_df <- data_df[indices_data_df,]
+    if(!is.character(species)) stop('species must be of class character')
 
-  ### meta$class[class_order,]
-  colData <- data.frame(class=meta[class_order,]$class, row.names=colnames(subsetted_data_df))
+    gene_model <- get_gene_model(data_df, species)
 
-  data_se <- SummarizedExperiment::SummarizedExperiment(
-    assays = list(counts = data.matrix(subsetted_data_df)),
-    rowRanges = gene_model,
-    colData=colData)
+    common_names <- intersect(rownames(data_df), names(gene_model))
+    indices_data_df <- match(common_names, rownames(data_df))
+    subsetted_data_df <- data_df[indices_data_df,]
+
+    colData <- data.frame(class=meta[class_order,]$class, row.names=colnames(subsetted_data_df))
+
+    data_se <- SummarizedExperiment::SummarizedExperiment(
+      assays = list(counts = data.matrix(subsetted_data_df)),
+      rowRanges = gene_model,
+      colData=colData)
+
+  } else {
+    colData <- data.frame(class=meta[class_order,]$class, row.names=colnames(data_df))
+
+    data_se <- SummarizedExperiment::SummarizedExperiment(
+      assays = list(counts = data.matrix(data_df)),
+      colData=colData)
+  }
 
   return(data_se)
 }

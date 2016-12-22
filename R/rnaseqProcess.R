@@ -1,23 +1,23 @@
-#' Perform a pair-wise differential expression analysis on the raw
-#' RNA-seq data
+#' Filter RNA-seq data for minimumnumber of counts in a class
 #'
-#' Takes in a \code{\link[SummarizedExperiment]{SummarizedExperiment}} object containing RNA-seq data and processes
-#' it using \code{\link{edgeR}} sequentially: 1. Filtering for low counts (> 1 cpm in a minimum number of samples equal to the smallest group size); 2. Normalization via the Trimmed Mean of M-values method in \code{\link[edgeR]{calcNormFactors}}; 3. Fit using \code{\link[edgeR]{estimateCommonDisp}}  and \code{\link[edgeR]{estimateTagwiseDisp}}; 4. Differential Expression testing via \code{\link[edgeR]{exactTest}};  5. Multiple-testing correction using Benjamini-Hochberge method in \code{\link[edgeR]{topTags}}.
+#' Takes in a \code{\link[SummarizedExperiment]{SummarizedExperiment}} object containing RNA-seq data and filters for low counts (> 1 cpm in a minimum number of samples equal to the smallest group size)
 #'
-#' @param se A \code{\link[SummarizedExperiment]{RangedSummarizedExperiment}}
+#' @param se A \code{\link[SummarizedExperiment]{SummarizedExperiment}}
 #' @param comparison A two-element array indicating the 'baseline' and 'test' classes IN THAT ORDER. DE testing  will be performed relative to baseline (element 2 vs 1).
 #'
-#' @return a list of objects including the filtered (filtered_dge) and normalized \code{\link[edgeR]{DGEList}} (tmm_normalized_dge) and the adjusted \code{\link[edgeR]{TopTags}} (bh_adjusted_tt)
+#' @return a filtered \code{\link[edgeR]{DGEList}}
 #'
 #' @export
-process_rseq <- function(se, comparison){
+filter_rseq <- function(se, comparison){
 
-  if(missing(comparison)){ comparison = levels(SummarizedExperiment::colData(se)$class) }
   if(length(comparison) != 2){ stop("comparison must be length 2") }
-  if(missing(se)){ stop("SummarizedExperiment parameter missing") }
 
   se_counts <- SummarizedExperiment::assays(se)$counts
-  se_genes <- as.data.frame(SummarizedExperiment::rowRanges(se))
+  if(is(se, 'RangedSummarizedExperiment')){
+    se_genes <- as.data.frame(SummarizedExperiment::rowRanges(se))
+  } else {
+    se_genes <- NULL
+  }
   se_groups <- SummarizedExperiment::colData(se)$class
 
   index_test <- se_groups == comparison[1]
@@ -28,47 +28,61 @@ process_rseq <- function(se, comparison){
     rowSums(edgeR::cpm(se_counts) > min_count_per_sample) >= min(sum(index_baseline), sum(index_test))
 
   dge_counts <- se_counts[row_with_mincount,]
-  dge_genes <- se_genes[row_with_mincount,]
+  if(is(se, 'RangedSummarizedExperiment')){
+    dge_genes <- se_genes[row_with_mincount,]
+  } else {
+    dge_genes <- NULL
+  }
 
   filtered_dge <- edgeR::DGEList(counts = se_counts[row_with_mincount,],
-    group = se_groups)
+  group = se_groups)
 
-  tmm_normalized_dge <- edgeR::calcNormFactors(filtered_dge, method = "TMM")
+  return(filtered_dge)
+}
 
-  fitted_commondisp_dge <- edgeR::estimateCommonDisp(tmm_normalized_dge)
+#' Perform a pair-wise differential expression analysis on RNA-seq data
+#'
+#' Takes in a \code{\link[edgeR]{DGEList}} containing (normalized) RNA-seq data, performs a fit using \code{\link[edgeR]{estimateCommonDisp}} and \code{\link[edgeR]{estimateTagwiseDisp}}, a differential expression test via \code{\link[edgeR]{exactTest}} and multiple-testing correction using Benjamini-Hochberge method in \code{\link[edgeR]{topTags}}.
+#'
+#' @param se A \code{\link[edgeR]{DGEList}}
+#' @param comparison A two-element array indicating the 'baseline' and 'test' classes IN THAT ORDER. DE testing  will be performed relative to baseline (element 2 vs 1).
+#'
+#' @return the fitted and adjusted \code{\link[edgeR]{TopTags}} object
+#'
+#' @export
+fit_adjust_rseq <- function(dge, comparison){
+
+  if(length(comparison) != 2){ stop("comparison must be length 2") }
+
+  fitted_commondisp_dge <- edgeR::estimateCommonDisp(dge)
   fitted_tagwise_dge <- edgeR::estimateTagwiseDisp(fitted_commondisp_dge)
 
   de_tested_dge <- edgeR::exactTest(fitted_tagwise_dge, pair = comparison)
 
   bh_adjusted_tt <- edgeR::topTags(de_tested_dge,
-    n = nrow(filtered_dge),
+    n = nrow(dge),
     adjust.method = "BH",
     sort.by = "PValue")
 
-  results <- list(
-    "filtered_dge" = filtered_dge,
-    "tmm_normalized_dge" = tmm_normalized_dge,
-    "bh_adjusted_tt" = bh_adjusted_tt)
-
-  return(results)
+  return(bh_adjusted_tt)
 }
 
 #' Generate text file content for genes ranked by a funtion of p-value for differential expression
 #'
 #' Creates content conforming to \href{http://software.broadinstitute.org/cancer/software/gsea/wiki/index.php/Data_formats#RNK:_Ranked_list_file_format_.28.2A.rnk.29}{GSEA's text file format for a ranked list file (.rnk)}. The column header names are arbitrary. The gene rank is based on: \eqn{sign(log(fold_change) * -log( pvalue )}. Writes data relative to getwd().
 #'
-#' @param bh_adjusted_tt This is the \code{\link[edgeR]{TopTags}} object emerging from \code{\link{process_rseq}}
+#' @param adjusted_tt This is the \code{\link[edgeR]{TopTags}} object emerging from \code{\link{process_rseq}}
 #' @param filepath a string indicating a valid local path.
 #'
 #' @export
-make_ranks <- function(bh_adjusted_tt, filepath = "."){
+make_ranks <- function(adjusted_tt, filepath = "."){
   if(!file.exists(filepath)) stop('invalid id/directory')
   fname = "rnaseq_de_ranks.rnk"
 
-  rank_values <- sign(bh_adjusted_tt$table$logFC) * (-1) * log10(bh_adjusted_tt$table$PValue)
+  rank_values <- sign(adjusted_tt$table$logFC) * (-1) * log10(adjusted_tt$table$PValue)
   rank_values_max <- max(rank_values[ rank_values != Inf ])
   rank_values_unique <- sapply( rank_values, function(x) replace(x, is.infinite(x), sign(x) * (rank_values_max + runif(1))) )
-  genenames <- noquote(rownames(bh_adjusted_tt$table))
+  genenames <- noquote(rownames(adjusted_tt$table))
 
   ranks_df <- data.frame(gene=genenames,
     rank=rank_values_unique,
@@ -107,11 +121,11 @@ make_expression <- function(normalized_dge, filepath = "."){
 #' Creates content conforming to \href{http://software.broadinstitute.org/cancer/software/gsea/wiki/index.php/Data_formats#CLS:_Categorical_.28e.g_tumor_vs_normal.29_class_file_format_.28.2A.cls.29}{GSEA's text file format for discrete classes}. Writes data relative to getwd().
 #'
 #' @param filtered_dge A \code{\link[edgeR]{DGEList}}
-#' @param bh_adjusted_tt A \code{\link[edgeR]{TopTags}}
+#' @param adjusted_tt A \code{\link[edgeR]{TopTags}}
 #' @param filepath a string indicating a valid local path.
 #'
 #' @export
-make_class <- function(filtered_dge, bh_adjusted_tt, filepath = "."){
+make_class <- function(filtered_dge, adjusted_tt, filepath = "."){
   if(!file.exists(file.path(filepath))) stop('invalid id/directory')
   fname = "rnaseq_classes.cls"
 
@@ -119,7 +133,7 @@ make_class <- function(filtered_dge, bh_adjusted_tt, filepath = "."){
   n_classes <- 2
 
   l1 <- paste(n_samples, n_classes, "1")
-  l2 <- paste("#", bh_adjusted_tt$comparison[1], bh_adjusted_tt$comparison[2])
+  l2 <- paste("#", adjusted_tt$comparison[1], adjusted_tt$comparison[2])
   l3 <- paste(filtered_dge$samples$group, collapse = " ")
 
   fileConn <- file(file.path(filepath, fname))

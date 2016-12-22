@@ -4,10 +4,10 @@
 \alias{make_ranks}
 \title{Generate text file content for genes ranked by a funtion of p-value for differential expression}
 \usage{
-make_ranks(bh_adjusted_tt, filepath = ".")
+make_ranks(adjusted_tt, filepath = ".")
 }
 \arguments{
-\item{bh_adjusted_tt}{This is the \code{\link[edgeR]{TopTags}} object emerging from \code{\link{process_rseq}}}
+\item{adjusted_tt}{This is the \code{\link[edgeR]{TopTags}} object emerging from \code{\link{process_rseq}}}
 
 \item{filepath}{a string indicating a valid local path.}
 }

@@ -10,16 +10,16 @@ filelist <- c("/Users/jeffreywong/Projects/PathwayCommons/workflows/packaging/em
   "/Users/jeffreywong/Projects/PathwayCommons/workflows/packaging/emRNASeq/inst/extdata/SMARTA_GITR_WT_1_htsqct.txt",
   "/Users/jeffreywong/Projects/PathwayCommons/workflows/packaging/emRNASeq/inst/extdata/SMARTA_GITR_WT_2_htsqct.txt",
   "/Users/jeffreywong/Projects/PathwayCommons/workflows/packaging/emRNASeq/inst/extdata/SMARTA_GITR_WT_3_htsqct.txt")
-# sample_merged_df <- emRNASeq::merge_data(meta_file, species = "mouse", filelist)
+sample_merged_df <- emRNASeq::merge_data(meta_file, species = NULL, filelist)
 
-sample_merged_df <- emRNASeq::merge_data(meta_file,
-  species = "mouse",
-  file0 = "/Users/jeffreywong/Projects/PathwayCommons/workflows/packaging/emRNASeq/inst/extdata/SMARTA_GITR_KO_1_htsqct.txt",
-  file1 = "/Users/jeffreywong/Projects/PathwayCommons/workflows/packaging/emRNASeq/inst/extdata/SMARTA_GITR_KO_2_htsqct.txt",
-  file2 = "/Users/jeffreywong/Projects/PathwayCommons/workflows/packaging/emRNASeq/inst/extdata/SMARTA_GITR_KO_3_htsqct.txt",
-  file3 = "/Users/jeffreywong/Projects/PathwayCommons/workflows/packaging/emRNASeq/inst/extdata/SMARTA_GITR_WT_1_htsqct.txt",
-  file4 = "/Users/jeffreywong/Projects/PathwayCommons/workflows/packaging/emRNASeq/inst/extdata/SMARTA_GITR_WT_2_htsqct.txt",
-  file5 = "/Users/jeffreywong/Projects/PathwayCommons/workflows/packaging/emRNASeq/inst/extdata/SMARTA_GITR_WT_3_htsqct.txt")
+# sample_merged_df <- emRNASeq::merge_data(meta_file,
+#   species = "mouse",
+#   file0 = "/Users/jeffreywong/Projects/PathwayCommons/workflows/packaging/emRNASeq/inst/extdata/SMARTA_GITR_KO_1_htsqct.txt",
+#   file1 = "/Users/jeffreywong/Projects/PathwayCommons/workflows/packaging/emRNASeq/inst/extdata/SMARTA_GITR_KO_2_htsqct.txt",
+#   file2 = "/Users/jeffreywong/Projects/PathwayCommons/workflows/packaging/emRNASeq/inst/extdata/SMARTA_GITR_KO_3_htsqct.txt",
+#   file3 = "/Users/jeffreywong/Projects/PathwayCommons/workflows/packaging/emRNASeq/inst/extdata/SMARTA_GITR_WT_1_htsqct.txt",
+#   file4 = "/Users/jeffreywong/Projects/PathwayCommons/workflows/packaging/emRNASeq/inst/extdata/SMARTA_GITR_WT_2_htsqct.txt",
+#   file5 = "/Users/jeffreywong/Projects/PathwayCommons/workflows/packaging/emRNASeq/inst/extdata/SMARTA_GITR_WT_3_htsqct.txt")
 
 test_that("merge_data requires valid params", {
   expect_error(emRNASeq::merge_data(sample_meta_df, NULL))

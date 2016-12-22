@@ -4,12 +4,12 @@
 \alias{make_class}
 \title{Generate categorical class text file content}
 \usage{
-make_class(filtered_dge, bh_adjusted_tt, filepath = ".")
+make_class(filtered_dge, adjusted_tt, filepath = ".")
 }
 \arguments{
 \item{filtered_dge}{A \code{\link[edgeR]{DGEList}}}
 
-\item{bh_adjusted_tt}{A \code{\link[edgeR]{TopTags}}}
+\item{adjusted_tt}{A \code{\link[edgeR]{TopTags}}}
 
 \item{filepath}{a string indicating a valid local path.}
 }

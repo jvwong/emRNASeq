@@ -9,33 +9,27 @@ var shell = (function(){
     template : String() +
       '<div class="container" id="em-shell">' +
         '<div id="em-munge">' +
-
           '<div class="em-section">' +
             '<h2>Inputs</h2>' +
             '<div class="row">' +
               '<p>Load in your tab-delimited (.txt) metadata file with columns for the \'id\' (filename) and \'class\' (phenotype).</p>' +
             '</div>' +
-            '<form>' +
-              '<div class="form-group" id="em-munge-meta">' +
-                '<label class="btn btn-info btn-file" for="em-munge-meta-input">Metadata</label>' +
-                '<input type="file" style="display: none;" id="em-munge-meta-input">' +
-                '<p class="help-block"></p>' +
-              '</div>' +
-              '<div class="form-group" id="em-munge-data">' +
-                '<label class="btn btn-primary btn-file" for="em-munge-data-input">Data</label>' +
-                '<input type="file" style="display: none;" id="em-munge-data-input" multiple>' +
-                '<p class="help-block"></p>' +
-              '</div>' +
-            '</form>' +
+            '<div class="form-group" id="em-munge-meta">' +
+              '<label class="btn btn-info btn-file" for="em-munge-meta-input">Metadata</label>' +
+              '<input type="file" style="display: none;" id="em-munge-meta-input">' +
+              '<p class="help-block"></p>' +
+            '</div>' +
+            '<div class="form-group" id="em-munge-data">' +
+              '<label class="btn btn-primary btn-file" for="em-munge-data-input">Data</label>' +
+              '<input type="file" style="display: none;" id="em-munge-data-input" multiple>' +
+              '<p class="help-block"></p>' +
+            '</div>' +
           '</div>' +
-
           '<hr/>' +
-
           '<div class="em-section">' +
             '<div class="row" id="em-munge-meta-results"></div>' +
             '<div class="row" id="em-munge-data-results"></div>' +
           '</div>' +
-
         '</div>' +
       '</div>',
 
@@ -76,9 +70,11 @@ var shell = (function(){
       $shell                : $container.find('#em-shell'),
       $munge                : $container.find('#em-shell #em-munge'),
       $munge_meta_input     : $container.find('#em-shell #em-munge #em-munge-meta input'),
+      $munge_meta_label     : $container.find('#em-shell #em-munge #em-munge-meta label'),
       $munge_meta_help      : $container.find('#em-shell #em-munge #em-munge-meta .help-block'),
       $munge_meta_results   : $container.find('#em-shell #em-munge #em-munge-meta-results'),
       $munge_data_input     : $container.find('#em-shell #em-munge #em-munge-data input'),
+      $munge_data_label     : $container.find('#em-shell #em-munge #em-munge-data label'),
       $munge_data_help      : $container.find('#em-shell #em-munge #em-munge-data .help-block'),
       $munge_data_results   : $container.find('#em-shell #em-munge #em-munge-data-results')
     };
@@ -188,7 +184,7 @@ var shell = (function(){
     // opencpu only accepts single files as arguments
     var args = {
       meta_file   : stateMap.metadata,
-      species     : 'mouse'
+      species     : null
     };
 
     // loop through files
