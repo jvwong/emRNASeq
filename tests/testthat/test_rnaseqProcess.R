@@ -1,50 +1,49 @@
 library(emRNASeq)
 
 context("RNA-seq processing")
-load(file.path("data", "sample_merged_data.RData"))
+
+data_dir <- file.path(getwd(), "data")
+sample_merged_se <- readRDS(file = file.path(data_dir, "sample_merged_se.rds"))
 
 ### filter_rseq
 comparison <- c("WT", "KO")
 
 test_that("filter_rseq requires two classes", {
-  expect_error(filter_rseq(sample_merged_data, c("WT")))
+  expect_error(filter_rseq(sample_merged_se, c("WT")))
 })
 
-sample_filtered_dge <- filter_rseq(sample_merged_data, comparison)
+sample_filtered_dge <- filter_rseq(sample_merged_se, comparison)
 test_that("filter_rseq requires two classes", {
   expect_is(sample_filtered_dge, "DGEList")
 })
 
-### fit_adjust_rseq
+### de_test_rseq
 tmm_normalized_dge <- edgeR::calcNormFactors(sample_filtered_dge, method = "TMM")
 test_that("process_rseq returns a DGEList with correct counts attribute", {
   expect_equal(dim(tmm_normalized_dge)[2], 6)
 })
 
-test_that("fit_adjust_rseq requires two classes", {
-  expect_error(fit_adjust_rseq(sample_merged_data, c("WT")))
+test_that("de_tested_tt requires two classes", {
+  expect_error(de_test_rseq(sample_merged_se, c("WT")))
 })
 
-fit_adjusted_tt <- fit_adjust_rseq(tmm_normalized_dge, comparison)
-test_that("filter_rseq requires two classes", {
-  expect_is(sample_filtered_dge, "DGEList")
+de_tested_tt <- de_test_rseq(tmm_normalized_dge, comparison)
+test_that("de_test_rseq returns a TopTags with correct attributes", {
+  expect_gt(dim(de_tested_tt$table)[1], 1)
 })
 
-test_that("process_rseq returns a TopTags with correct attributes", {
-  expect_gt(dim(fit_adjusted_tt$table)[1], 1)
+### format_ranks_gsea
+test_that("format_ranks_gsea returns a data.frame", {
+  expect_is(emRNASeq::format_ranks_gsea(de_tested_tt), 'data.frame')
 })
 
-### make_ranks
-test_that("make_ranks rejects an invalid path", {
-  expect_error(emRNASeq::make_ranks(fit_adjusted_tt, file.path(getwd(), "garbage")))
+### format_expression_gsea
+test_that("format_expression_gsea returns a data.frame", {
+  expect_is(emRNASeq::format_expression_gsea(tmm_normalized_dge), 'data.frame')
 })
 
-### make_expression
-test_that("make_expression rejects an invalid path", {
-  expect_error(emRNASeq::make_expression(tmm_normalized_dge, file.path(getwd(), "garbage")))
-})
-
-### make_class
-test_that("make_class rejects an invalid path", {
-  expect_error(emRNASeq::make_class(sample_filtered_dge, fit_adjusted_tt, filepath = file.path(getwd(), "garbage")))
+### format_class_gsea
+test_that("format_class_gsea is valid matrix with correct dimensions", {
+  expect_is(emRNASeq::format_class_gsea(sample_filtered_dge, de_tested_tt), 'matrix')
+  expect_equal(dim(emRNASeq::format_class_gsea(sample_filtered_dge, de_tested_tt)), c(3,1))
 })
