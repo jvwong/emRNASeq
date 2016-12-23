@@ -23,8 +23,8 @@ test_that("process_rseq returns a DGEList with correct counts attribute", {
   expect_equal(dim(tmm_normalized_dge)[2], 6)
 })
 
-test_that("de_tested_tt requires two classes", {
-  expect_error(de_test_rseq(sample_merged_se, c("WT")))
+test_that("de_test_rseq requires two classes", {
+  expect_error(de_test_rseq(tmm_normalized_dge, c("WT")))
 })
 
 de_tested_tt <- de_test_rseq(tmm_normalized_dge, comparison)

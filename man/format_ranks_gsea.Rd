@@ -4,10 +4,10 @@
 \alias{format_ranks_gsea}
 \title{Generate text file content for genes ranked by a funtion of p-value for differential expression}
 \usage{
-format_ranks_gsea(adjusted_tt)
+format_ranks_gsea(de_tested_tt)
 }
 \arguments{
-\item{adjusted_tt}{This is the \code{\link[edgeR]{TopTags}} object emerging from \code{\link{process_rseq}}}
+\item{de_tested_tt}{This is the \code{\link[edgeR]{TopTags}} object emerging from \code{\link{process_rseq}}}
 }
 \value{
 a \code{\link[base]{data.frame}} of the ranks

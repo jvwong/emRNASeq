@@ -44,44 +44,44 @@ filter_rseq <- function(se, comparison){
 #'
 #' Takes in a \code{\link[edgeR]{DGEList}} containing (normalized) RNA-seq data, performs a fit using \code{\link[edgeR]{estimateCommonDisp}} and \code{\link[edgeR]{estimateTagwiseDisp}}, a differential expression test via \code{\link[edgeR]{exactTest}} and multiple-testing correction using Benjamini-Hochberge method in \code{\link[edgeR]{topTags}}.
 #'
-#' @param se A \code{\link[edgeR]{DGEList}}
+#' @param normalized_dge A \code{\link[edgeR]{DGEList}}, typically the output of \code{\link[edgeR]{calcNormFactors}}
 #' @param comparison A two-element array indicating the 'baseline' and 'test' classes IN THAT ORDER. DE testing  will be performed relative to baseline (element 2 vs 1).
 #'
 #' @return the fitted and adjusted \code{\link[edgeR]{TopTags}} object
 #'
 #' @export
-de_test_rseq <- function(dge, comparison){
+de_test_rseq <- function(normalized_dge, comparison){
 
   if(length(comparison) != 2){ stop("comparison must be length 2") }
 
-  fitted_commondisp_dge <- edgeR::estimateCommonDisp(dge)
+  fitted_commondisp_dge <- edgeR::estimateCommonDisp(normalized_dge)
   fitted_tagwise_dge <- edgeR::estimateTagwiseDisp(fitted_commondisp_dge)
 
   de_tested_dge <- edgeR::exactTest(fitted_tagwise_dge, pair = comparison)
 
-  bh_adjusted_tt <- edgeR::topTags(de_tested_dge,
-    n = nrow(dge),
+  bh_de_tested_tt <- edgeR::topTags(de_tested_dge,
+    n = nrow(normalized_dge),
     adjust.method = "BH",
     sort.by = "PValue")
 
-  return(bh_adjusted_tt)
+  return(bh_de_tested_tt)
 }
 
 #' Generate text file content for genes ranked by a funtion of p-value for differential expression
 #'
 #' Creates content conforming to \href{http://software.broadinstitute.org/cancer/software/gsea/wiki/index.php/Data_formats#RNK:_Ranked_list_file_format_.28.2A.rnk.29}{GSEA's text file format for a ranked list file (.rnk)}. The column header names are arbitrary. The gene rank is based on: \eqn{sign(log(fold_change) * -log( pvalue )}.
 #'
-#' @param adjusted_tt This is the \code{\link[edgeR]{TopTags}} object emerging from \code{\link{process_rseq}}
+#' @param de_tested_tt This is the \code{\link[edgeR]{TopTags}} object emerging from \code{\link{process_rseq}}
 #'
 #' @return a \code{\link[base]{data.frame}} of the ranks
 #'
 #' @export
-format_ranks_gsea <- function(adjusted_tt){
+format_ranks_gsea <- function(de_tested_tt){
 
-  rank_values <- sign(adjusted_tt$table$logFC) * (-1) * log10(adjusted_tt$table$PValue)
+  rank_values <- sign(de_tested_tt$table$logFC) * (-1) * log10(de_tested_tt$table$PValue)
   rank_values_max <- max(rank_values[ rank_values != Inf ])
   rank_values_unique <- sapply( rank_values, function(x) replace(x, is.infinite(x), sign(x) * (rank_values_max + runif(1))) )
-  genenames <- noquote(rownames(adjusted_tt$table))
+  genenames <- noquote(rownames(de_tested_tt$table))
 
   ranks_df <- data.frame(gene=genenames,
     rank=rank_values_unique,
@@ -95,14 +95,14 @@ format_ranks_gsea <- function(adjusted_tt){
 #'
 #' Creates a \code{\link[base]{data.frame}} conforming to \href{http://software.broadinstitute.org/cancer/software/gsea/wiki/index.php/Data_formats#TXT:_Text_file_format_for_expression_dataset_.28.2A.txt.29}{GSEA's text file format for an expression dataset}.
 #'
-#' @param dge A \code{\link[edgeR]{DGEList}}, typically the result of \code{\link[edgeR]{calcNormFactors}}
+#' @param normalized_dge A \code{\link[edgeR]{DGEList}}, typically the result of \code{\link[edgeR]{calcNormFactors}}
 #'
 #' @return a \code{\link[base]{data.frame}} of the expression data
 #'
 #' @export
-format_expression_gsea <- function(dge){
+format_expression_gsea <- function(normalized_dge){
 
-  cpm_mat <- edgeR::cpm(dge, normalized.lib.size=TRUE)
+  cpm_mat <- edgeR::cpm(normalized_dge, normalized.lib.size=TRUE)
 
   meta_df <- data.frame(
     NAME = rownames(cpm_mat),
@@ -119,20 +119,20 @@ format_expression_gsea <- function(dge){
 #'
 #' Creates content conforming to \href{http://software.broadinstitute.org/cancer/software/gsea/wiki/index.php/Data_formats#CLS:_Categorical_.28e.g_tumor_vs_normal.29_class_file_format_.28.2A.cls.29}{GSEA's text file format for discrete classes}.
 #'
-#' @param dge A \code{\link[edgeR]{DGEList}}
-#' @param tested_tt A \code{\link[edgeR]{TopTags}}
+#' @param filtered_dge A \code{\link[edgeR]{DGEList}}, typically a filtered version coming out of  \code{\link{filter_rseq}}
+#' @param de_tested_tt A \code{\link[edgeR]{TopTags}}
 #'
 #' @return a matrix
 #'
 #' @export
-format_class_gsea <- function(dge, tested_tt){
+format_class_gsea <- function(filtered_dge, de_tested_tt){
 
-  n_samples <- dim(dge)[2]
+  n_samples <- dim(filtered_dge)[2]
   n_classes <- 2
 
   l1 <- paste(n_samples, n_classes, "1")
-  l2 <- paste("#", tested_tt$comparison[1], tested_tt$comparison[2])
-  l3 <- paste(dge$samples$group, collapse = " ")
+  l2 <- paste("#", de_tested_tt$comparison[1], de_tested_tt$comparison[2])
+  l3 <- paste(filtered_dge$samples$group, collapse = " ")
 
   return(rbind(l1, l2, l3))
 }
