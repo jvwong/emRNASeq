@@ -17,7 +17,8 @@
   ],
   "dependencies": {
     "jquery": "^3.1.1",
-    "opencpu.js": "opencpu#*",
-    "bootstrap": "^3.3.7"
+    "bootstrap": "^3.3.7",
+    "datatables": "^1.10.13",
+    "jquery.urianchor": "^1.2.3"
   }
 }

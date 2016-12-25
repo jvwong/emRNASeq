@@ -6,59 +6,77 @@ var shell = (function(){
   // ---------- BEGIN MODULE SCOPE VARIABLES -----------------------------------
   var
   configMap = {
+    anchor_schema_map : {
+      data : { enabled: true, disabled: true }
+    },
     template : String() +
       '<div class="container" id="em-shell">' +
         '<div id="em-munge">' +
           '<div class="em-section">' +
-            '<h2>Inputs</h2>' +
-            '<div class="row">' +
-              '<p>Load in your tab-delimited (.txt) metadata file with columns for the \'id\' (filename) and \'class\' (phenotype).</p>' +
-            '</div>' +
-            '<div class="form-group" id="em-munge-meta">' +
-              '<label class="btn btn-info btn-file" for="em-munge-meta-input">Metadata</label>' +
-              '<input type="file" style="display: none;" id="em-munge-meta-input">' +
-              '<p class="help-block"></p>' +
-            '</div>' +
-            '<div class="form-group" id="em-munge-data">' +
-              '<label class="btn btn-primary btn-file" for="em-munge-data-input">Data</label>' +
-              '<input type="file" style="display: none;" id="em-munge-data-input" multiple>' +
-              '<p class="help-block"></p>' +
-            '</div>' +
+            '<h2>Data Munge <small>Upload RNA sequencing (meta)data</small></h2>' +
+            '<hr/>' +
+            '<form>' +
+              '<div class="form-group" id="em-munge-species">' +
+                '<label for="em-munge-species-input">Species</label>' +
+                '<input type="text" class="form-control" id="em-munge-species-input" placeholder="Optional">' +
+                '<p class="help-block"></p>' +
+              '</div>' +
+
+              '<div class="form-group" id="em-munge-meta">' +
+                '<h3>Metadata</h3>' +
+                '<label class="btn btn-info btn-file btn-lg btn-block" for="em-munge-meta-input">Metadata</label>' +
+                '<input type="file" class="form-control" style="display: none;" id="em-munge-meta-input">' +
+                '<p class="help-block"><small>Tab-delimited (.txt). Headers for \'id\' (filenames) and \'class\'</small></p>' +
+                '<div class="form-group" id="em-munge-meta-results"></div>' +
+              '</div>' +
+
+              '<div class="form-group" id="em-munge-data">' +
+                '<h3>Data</h3>' +
+                '<label class="btn btn-primary btn-file btn-lg btn-block" for="em-munge-data-input" disabled>Data</label>' +
+                '<input type="file" class="form-control" style="display: none;" id="em-munge-data-input" disabled multiple>' +
+                '<p class="help-block"><small>Tab-delimited (.txt). Each row is gene name and count</small></p>' +
+                '<div class="form-group" id="em-munge-data-results"></div>' +
+              '</div>' +
+
+            '</form>' +
           '</div>' +
           '<hr/>' +
-          '<div class="em-section">' +
-            '<div class="row" id="em-munge-meta-results"></div>' +
-            '<div class="row" id="em-munge-data-results"></div>' +
-          '</div>' +
         '</div>' +
       '</div>',
-
     table_template : String() +
      '<table class="table table-striped table-bordered em-table">' +
        '<thead>' +
          '<tr></tr>' +
        '</thead>' +
      '</table>',
-
      code_template : String() +
       '<pre class="em-code"></pre>'
   },
   stateMap = {
     ocpu                : undefined,
+    anchor_map          : {},
     metadata            : undefined,
     meta_session        : undefined,
     data                : undefined,
-    data_session        : undefined
+    data_session        : undefined,
+    is_metadata_loaded  : false,
+    is_data_loaded      : false,
+    is_data_enabled     : false
   },
   jqueryMap = {},
-  registerListeners,
-  onMetaFileChange, onDataFilesChange,
+  copyAnchorMap, changeAnchorPart, onHashchange,
   setJQueryMap,
+  toggleData,
+  onMetaFileChange, processMetaFile, onDataFilesChange, processDataFiles,
   displayAsTable, displayAsPrint,
   initModule;
   // ---------- END MODULE SCOPE VARIABLES -------------------------------------
 
+
   // ---------- BEGIN UTILITY METHODS ------------------------------------------
+  copyAnchorMap = function(){
+    return $.extend(true, {}, stateMap.anchor_map);
+  };
   // ---------- END UTILITY METHODS --------------------------------------------
 
 
@@ -73,6 +91,9 @@ var shell = (function(){
       $munge_meta_label     : $container.find('#em-shell #em-munge #em-munge-meta label'),
       $munge_meta_help      : $container.find('#em-shell #em-munge #em-munge-meta .help-block'),
       $munge_meta_results   : $container.find('#em-shell #em-munge #em-munge-meta-results'),
+      $munge_spec_input     : $container.find('#em-shell #em-munge #em-munge-species input'),
+      $munge_spec_label     : $container.find('#em-shell #em-munge #em-munge-species label'),
+      $munge_spec_help      : $container.find('#em-shell #em-munge #em-munge-species .help-block'),
       $munge_data_input     : $container.find('#em-shell #em-munge #em-munge-data input'),
       $munge_data_label     : $container.find('#em-shell #em-munge #em-munge-data label'),
       $munge_data_help      : $container.find('#em-shell #em-munge #em-munge-data .help-block'),
@@ -80,6 +101,84 @@ var shell = (function(){
     };
   };
   // End DOM method /setJQueryMap/
+
+  // Being DOM method /toggleData/
+  /* Toggle the data input availbility
+   *
+   * This function sets statMap.is_data_enabled to true if data input is enabled.
+   *
+   *
+   * @param do_enable
+   *
+   * @return boolean
+   */
+  toggleData = function( do_enable ) {
+    if ( do_enable ) {
+      jqueryMap.$munge_data_label.attr('disabled', false);
+      jqueryMap.$munge_data_input.attr('disabled', false);
+      stateMap.is_data_enabled = true;
+      return true;
+    }
+
+    jqueryMap.$munge_data_label.attr('disabled', true);
+    jqueryMap.$munge_data_input.attr('disabled', true);
+    stateMap.is_data_enabled = false;
+
+    return true;
+  };
+  // End DOM method /toggleData/
+
+  // Begin DOM method /changeAnchorPart/
+  /* Changes part of the URI anchor component
+   *
+   * This method copies the map using copyAnchorMap(); modifies the key-value using arg_map;
+   * manages the distinction between indpendent and dependent values; attempts to change the anchor
+   * and returns true on success and false on failure.
+   *
+   * @param arg_map The map describing what part of the URI anchor we wanted changed
+   *
+   * @return  boolean Whether the anchor portion could be updated
+   */
+   changeAnchorPart = function( arg_map ){
+     var anchor_map_revise = copyAnchorMap(),
+      bool_return = true,
+      key_name, key_name_dep;
+
+      //Begin merge changes into anchor map
+      KEYVAL:
+      for ( key_name in arg_map ){
+        if ( arg_map.hasOwnProperty( key_name ) ){
+          //skip dependent keys during iteration
+          if( key_name.indexOf( '_' ) === 0 ) { continue KEYVAL; }
+
+          //update independent key value
+          anchor_map_revise[key_name] = arg_map[key_name];
+
+          //update matching dependent key
+          key_name_dep = '_' + key_name;
+          if( arg_map[key_name_dep] ){
+            anchor_map_revise[key_name_dep] = arg_map[key_name_dep];
+          } else {
+            delete anchor_map_revise[key_name_dep];
+            delete anchor_map_revise['_s' + key_name_dep];
+          }
+        }
+      }
+      // End merge changes into anchor map
+
+      // Begin attempt to update URI; revert if not successful
+      try {
+        $.uriAnchor.setAnchor( anchor_map_revise );
+      } catch ( error ) {
+        // replace URI with existing state
+        alert( error );
+        $.uriAnchor.setAnchor( stateMap.anchor_map, null, true);
+        bool_return = false;
+      }
+
+      return bool_return;
+   };
+  // End DOM method /changeAnchorPart/
 
   // Begin DOM method /displayAsTable/
   displayAsTable = function(text, session, $container){
@@ -102,7 +201,7 @@ var shell = (function(){
       if(headers.length){
         $table.find('thead tr').html($(headers.join('')));
       }
-      $container.append('<h3>' + text + '</h3>');
+      $container.append('<h4>' + text + '</h4>');
       $container.append($table);
       $table.DataTable({
             "aaData": data,
@@ -119,19 +218,16 @@ var shell = (function(){
       // DOM manipulations
       var $code = $(configMap.code_template);
       $code.html(data);
-      $container.append('<h3>' + text + '</h3>');
+      $container.append('<h4>' + text + '</h4>');
       $container.append($code);
-      $container.append('<a type="button" class="btn btn-success" href="' + session.getLoc() + 'R/.val/rds">Download (.rds)</a>');
+      $container.append('<a type="button" class="btn btn-success" href="' +
+       session.getLoc() + 'R/.val/rds">Download (.rds)</a>');
     });
   };
   // End DOM method /displayAsPrint/
-  // ---------- END DOM METHODS ------------------------------------------------
 
-  // ---------- BEGIN EVENT HANDLERS -------------------------------------------
-  // Begin event handler /onMetaFileChange/
-  onMetaFileChange = function(){
-    //arguments
-    var file = $(this)[0].files[0];
+  // Begin DOM method /processMetaFile/
+  processMetaFile = function(file, cb){
     if(!file){
       alert('No file selected.');
       return;
@@ -145,8 +241,9 @@ var shell = (function(){
       meta_file : file
     }, function(session){
       stateMap.meta_session = session;
+      stateMap.is_metadata_loaded = true;
       jqueryMap.$munge_meta_results.empty();
-      displayAsTable('Metadata',
+      displayAsTable('Metadata details',
         stateMap.meta_session,
         jqueryMap.$munge_meta_results);
     });
@@ -154,20 +251,24 @@ var shell = (function(){
     jqxhr.done(function(){
       //clear any previous help messages
       jqueryMap.$munge_meta_help.text(file.name);
+      cb(true);
     });
 
     jqxhr.fail(function(){
       var errText = "Server error: " + jqxhr.responseText;
       console.error(errText);
       jqueryMap.$munge_meta_help.text(errText);
+      jqueryMap.$munge_meta_results.empty();
+      cb(false);
     });
-  };
-  // End event handler /onMetaFileChange/
 
-  // Begin event handler /onDataFilesChange/
-  onDataFilesChange = function(){
-    //arguments
-    var files = $(this)[0].files;
+    return true;
+  };
+  // End DOM method /processMetaFile/
+
+  // Begin DOM method /processDataFiles/
+  processDataFiles = function(files, species, cb){
+
     if(!files.length){
       alert('No file(s) selected.');
       return;
@@ -184,7 +285,7 @@ var shell = (function(){
     // opencpu only accepts single files as arguments
     var args = {
       meta_file   : stateMap.metadata,
-      species     : null
+      species     : species
     };
 
     // loop through files
@@ -203,20 +304,91 @@ var shell = (function(){
 
     jqxhr.done(function(){
       jqueryMap.$munge_data_help.text('Files merged: ' + stateMap.data.length);
+      cb(true);
     });
 
     jqxhr.fail(function(){
       var errText = "Server error: " + jqxhr.responseText;
       console.error(errText);
       jqueryMap.$munge_data_help.text(errText);
+      jqueryMap.$munge_data_results.empty();
+      cb(false);
+    });
+
+    return true;
+  };
+  // End DOM method /processDataFiles/
+  // ---------- END DOM METHODS ------------------------------------------------
+
+  // ---------- BEGIN EVENT HANDLERS -------------------------------------------
+  // Begin event handler /onHashchange/
+  /* Purpose: Handles the hashchange event
+   *
+   * Parses the URI anchor; compares the porposed application state with current;
+   * adjust the application only where proposed state differs from existing
+   * @param event jQuery event object
+   *
+   * @return boolean
+   */
+   onHashchange = function( ){
+     var
+      anchor_map_previous = copyAnchorMap(),
+      anchor_map_proposed,
+      _s_data_previous, _s_data_proposed,
+      s_data_proposed;
+
+      //attempt to parse anchor
+      try {
+        anchor_map_proposed = $.uriAnchor.makeAnchorMap();
+      } catch ( error ) {
+        $.uriAnchor.setAnchor( anchor_map_previous, null, true );
+        return false;
+      }
+      stateMap.anchor_map = anchor_map_proposed;
+
+      //convenience vars
+      _s_data_previous = anchor_map_previous._s_data;
+      _s_data_proposed = anchor_map_proposed._s_data;
+
+      //begin adjust data component if changed
+      if ( ! anchor_map_previous || _s_data_previous !== _s_data_proposed){
+        s_data_proposed = anchor_map_proposed.data;
+        switch ( s_data_proposed ) {
+          case 'enabled':
+            toggleData( true );
+          break;
+          case 'disabled':
+            toggleData( false );
+          break;
+          default:
+            toggleData( false );
+            delete anchor_map_proposed.data;
+            $.uriAnchor.setAnchor( anchor_map_proposed, null, true );
+        }
+      }
+      //End adjust data component if changed
+
+      return false;
+   };
+   // End event handler /onHashchange/
+
+  onMetaFileChange = function(){
+    var file = $(this)[0].files[0];
+    return processMetaFile(file, function(done){
+      if(done) {
+        changeAnchorPart({
+          data: ( stateMap.is_metadata_loaded ? 'enabled' : 'disabled' )
+        });
+      }
     });
   };
-  // End event handler /onDataFilesChange/
 
-
-  registerListeners = function(){
-    jqueryMap.$munge_meta_input.change(onMetaFileChange);
-    jqueryMap.$munge_data_input.change(onDataFilesChange);
+  onDataFilesChange = function(){
+    var files = $(this)[0].files,
+    species = jqueryMap.$munge_spec_input.val() || null;
+    return processDataFiles(files, species, function(done){
+      if(done) { stateMap.is_data_loaded = true; }
+    });
   };
   // ---------- END EVENT HANDLERS ---------------------------------------------
 
@@ -234,7 +406,24 @@ var shell = (function(){
     }
     $container.html(configMap.template);
     setJQueryMap($container);
-    registerListeners();
+
+    // bind file change HANDLERS
+    jqueryMap.$munge_meta_input.change(onMetaFileChange);
+    jqueryMap.$munge_data_input.change(onDataFilesChange);
+
+    // configure uriAnchor to use our schema
+    $.uriAnchor.configModule({
+      schema_map : configMap.anchor_schema_map
+    });
+
+
+    // Handles URI anchor change events.
+    // This is done /after/ all feature modules are configured and init'd,
+    // otherwise they will not be ready to handle the trigger event, which is
+    // used to ensure the anchor is considered on-load
+    $(window)
+      .bind( 'hashchange', onHashchange )
+      .trigger( 'hashchange' );
   };
   // ---------- END PUBLIC METHODS --------------------------------------------
 
