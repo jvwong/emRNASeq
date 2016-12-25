@@ -1,7 +1,7 @@
 "use strict";
 
 var shell = require('./shell');
-var ocpu = require('./lib/opencpu.js');
+var ocpu = require('../lib/opencpu.js');
 var boot = require('./boot');
 
 //init this script when the page has loaded

@@ -19,6 +19,8 @@
     "jquery": "^3.1.1",
     "bootstrap": "^3.3.7",
     "datatables": "^1.10.13",
-    "jquery.urianchor": "^1.2.3"
+    "jquery.urianchor": "^1.2.3",
+    "datatables.net": "^1.10.13",
+    "datatables.net-bs": "^1.10.13"
   }
 }

@@ -7,7 +7,8 @@ var shell = (function(){
   var
   configMap = {
     anchor_schema_map : {
-      data : { enabled: true, disabled: true }
+      metadata  : { enabled: true, disabled: true },
+      data      : { enabled: true, disabled: true }
     },
     template : String() +
       '<div class="container" id="em-shell">' +
@@ -15,13 +16,13 @@ var shell = (function(){
           '<div class="em-section">' +
             '<h2>Data Munge <small>Upload RNA sequencing (meta)data</small></h2>' +
             '<hr/>' +
+
             '<form>' +
               '<div class="form-group" id="em-munge-species">' +
                 '<label for="em-munge-species-input">Species</label>' +
                 '<input type="text" class="form-control" id="em-munge-species-input" placeholder="Optional">' +
                 '<p class="help-block"></p>' +
               '</div>' +
-
               '<div class="form-group" id="em-munge-meta">' +
                 '<h3>Metadata</h3>' +
                 '<label class="btn btn-info btn-file btn-lg btn-block" for="em-munge-meta-input">Metadata</label>' +
@@ -29,26 +30,27 @@ var shell = (function(){
                 '<p class="help-block"><small>Tab-delimited (.txt). Headers for \'id\' (filenames) and \'class\'</small></p>' +
                 '<div class="form-group" id="em-munge-meta-results"></div>' +
               '</div>' +
-
               '<div class="form-group" id="em-munge-data">' +
                 '<h3>Data</h3>' +
-                '<label class="btn btn-primary btn-file btn-lg btn-block" for="em-munge-data-input" disabled>Data</label>' +
-                '<input type="file" class="form-control" style="display: none;" id="em-munge-data-input" disabled multiple>' +
+                '<label class="btn btn-primary btn-file btn-lg btn-block" for="em-munge-data-input">Data</label>' +
+                '<input type="file" class="form-control" style="display: none;" id="em-munge-data-input" multiple>' +
                 '<p class="help-block"><small>Tab-delimited (.txt). Each row is gene name and count</small></p>' +
                 '<div class="form-group" id="em-munge-data-results"></div>' +
               '</div>' +
-
             '</form>' +
+
           '</div>' +
           '<hr/>' +
         '</div>' +
       '</div>',
+
     table_template : String() +
      '<table class="table table-striped table-bordered em-table">' +
        '<thead>' +
          '<tr></tr>' +
        '</thead>' +
      '</table>',
+
      code_template : String() +
       '<pre class="em-code"></pre>'
   },
@@ -58,15 +60,12 @@ var shell = (function(){
     metadata            : undefined,
     meta_session        : undefined,
     data                : undefined,
-    data_session        : undefined,
-    is_metadata_loaded  : false,
-    is_data_loaded      : false,
-    is_data_enabled     : false
+    data_session        : undefined
   },
   jqueryMap = {},
   copyAnchorMap, changeAnchorPart, onHashchange,
   setJQueryMap,
-  toggleData,
+  toggleInput,
   onMetaFileChange, processMetaFile, onDataFilesChange, processDataFiles,
   displayAsTable, displayAsPrint,
   initModule;
@@ -87,10 +86,10 @@ var shell = (function(){
       $container            : $container,
       $shell                : $container.find('#em-shell'),
       $munge                : $container.find('#em-shell #em-munge'),
-      $munge_meta_input     : $container.find('#em-shell #em-munge #em-munge-meta input'),
-      $munge_meta_label     : $container.find('#em-shell #em-munge #em-munge-meta label'),
-      $munge_meta_help      : $container.find('#em-shell #em-munge #em-munge-meta .help-block'),
-      $munge_meta_results   : $container.find('#em-shell #em-munge #em-munge-meta-results'),
+      $munge_metadata_input     : $container.find('#em-shell #em-munge #em-munge-meta input'),
+      $munge_metadata_label     : $container.find('#em-shell #em-munge #em-munge-meta label'),
+      $munge_metadata_help      : $container.find('#em-shell #em-munge #em-munge-meta .help-block'),
+      $munge_metadata_results   : $container.find('#em-shell #em-munge #em-munge-meta-results'),
       $munge_spec_input     : $container.find('#em-shell #em-munge #em-munge-species input'),
       $munge_spec_label     : $container.find('#em-shell #em-munge #em-munge-species label'),
       $munge_spec_help      : $container.find('#em-shell #em-munge #em-munge-species .help-block'),
@@ -102,31 +101,34 @@ var shell = (function(){
   };
   // End DOM method /setJQueryMap/
 
-  // Being DOM method /toggleData/
-  /* Toggle the data input availbility
+  // Being DOM method /toggleInput/
+  /* Toggle the input availbility for a matched element
    *
-   * This function sets statMap.is_data_enabled to true if data input is enabled.
-   *
+   * This should only be called by onHashchange
    *
    * @param do_enable
+   * @param $handles an array of jQuery objects to enable/disable
+   * @param stateMap_handle the stateMap key to set
    *
    * @return boolean
    */
-  toggleData = function( do_enable ) {
+  toggleInput = function( do_enable, $handles ) {
     if ( do_enable ) {
-      jqueryMap.$munge_data_label.attr('disabled', false);
-      jqueryMap.$munge_data_input.attr('disabled', false);
-      stateMap.is_data_enabled = true;
+
+      $.each( $handles, function( index, value ){
+        value.attr('disabled', false);
+        value.attr('disabled', false);
+      });
       return true;
     }
 
-    jqueryMap.$munge_data_label.attr('disabled', true);
-    jqueryMap.$munge_data_input.attr('disabled', true);
-    stateMap.is_data_enabled = false;
-
+    $.each( $handles, function( index, value ){
+      value.attr('disabled', true);
+      value.attr('disabled', true);
+    });
     return true;
   };
-  // End DOM method /toggleData/
+  // End DOM method /toggleInput/
 
   // Begin DOM method /changeAnchorPart/
   /* Changes part of the URI anchor component
@@ -241,24 +243,23 @@ var shell = (function(){
       meta_file : file
     }, function(session){
       stateMap.meta_session = session;
-      stateMap.is_metadata_loaded = true;
-      jqueryMap.$munge_meta_results.empty();
+      jqueryMap.$munge_metadata_results.empty();
       displayAsTable('Metadata details',
         stateMap.meta_session,
-        jqueryMap.$munge_meta_results);
+        jqueryMap.$munge_metadata_results);
     });
 
     jqxhr.done(function(){
       //clear any previous help messages
-      jqueryMap.$munge_meta_help.text(file.name);
+      jqueryMap.$munge_metadata_help.text(file.name);
       cb(true);
     });
 
     jqxhr.fail(function(){
       var errText = "Server error: " + jqxhr.responseText;
       console.error(errText);
-      jqueryMap.$munge_meta_help.text(errText);
-      jqueryMap.$munge_meta_results.empty();
+      jqueryMap.$munge_metadata_help.text(errText);
+      jqueryMap.$munge_metadata_results.empty();
       cb(false);
     });
 
@@ -333,9 +334,7 @@ var shell = (function(){
    onHashchange = function( ){
      var
       anchor_map_previous = copyAnchorMap(),
-      anchor_map_proposed,
-      _s_data_previous, _s_data_proposed,
-      s_data_proposed;
+      anchor_map_proposed;
 
       //attempt to parse anchor
       try {
@@ -346,27 +345,60 @@ var shell = (function(){
       }
       stateMap.anchor_map = anchor_map_proposed;
 
-      //convenience vars
+
+      //*** Begin adjust data component
+      var
+      _s_data_previous,
+      _s_data_proposed,
+      s_data_proposed;
       _s_data_previous = anchor_map_previous._s_data;
       _s_data_proposed = anchor_map_proposed._s_data;
-
-      //begin adjust data component if changed
       if ( ! anchor_map_previous || _s_data_previous !== _s_data_proposed){
         s_data_proposed = anchor_map_proposed.data;
         switch ( s_data_proposed ) {
           case 'enabled':
-            toggleData( true );
+            toggleInput( true,
+              [jqueryMap.$munge_data_label, jqueryMap.$munge_data_input] );
           break;
           case 'disabled':
-            toggleData( false );
+            toggleInput( false,
+              [jqueryMap.$munge_data_label, jqueryMap.$munge_data_input] );
           break;
           default:
-            toggleData( false );
+            toggleInput( false,
+              [jqueryMap.$munge_data_label, jqueryMap.$munge_data_input] );
             delete anchor_map_proposed.data;
             $.uriAnchor.setAnchor( anchor_map_proposed, null, true );
         }
       }
-      //End adjust data component if changed
+      //End adjust data component
+
+      //*** Begin adjust metadata component
+      var
+      _s_metadata_previous,
+      _s_metadata_proposed,
+      s_metadata_proposed;
+      _s_metadata_previous = anchor_map_previous._s_metadata;
+      _s_metadata_proposed = anchor_map_proposed._s_metadata;
+      if ( ! anchor_map_previous || _s_metadata_previous !== _s_metadata_proposed){
+        s_metadata_proposed = anchor_map_proposed.metadata;
+        switch ( s_metadata_proposed ) {
+          case 'enabled':
+            toggleInput( true,
+              [jqueryMap.$munge_metadata_label, jqueryMap.$munge_metadata_input] );
+          break;
+          case 'disabled':
+            toggleInput( false,
+              [jqueryMap.$munge_metadata_label, jqueryMap.$munge_metadata_input] );
+          break;
+          default:
+            toggleInput( false,
+              [jqueryMap.$munge_metadata_label, jqueryMap.$munge_metadata_input] );
+            delete anchor_map_proposed.metadata;
+            $.uriAnchor.setAnchor( anchor_map_proposed, null, true );
+        }
+      }
+      //End adjust metadata component
 
       return false;
    };
@@ -375,11 +407,9 @@ var shell = (function(){
   onMetaFileChange = function(){
     var file = $(this)[0].files[0];
     return processMetaFile(file, function(done){
-      if(done) {
-        changeAnchorPart({
-          data: ( stateMap.is_metadata_loaded ? 'enabled' : 'disabled' )
-        });
-      }
+      changeAnchorPart({
+        data: ( done ? 'enabled' : 'disabled' )
+      });
     });
   };
 
@@ -387,7 +417,9 @@ var shell = (function(){
     var files = $(this)[0].files,
     species = jqueryMap.$munge_spec_input.val() || null;
     return processDataFiles(files, species, function(done){
-      if(done) { stateMap.is_data_loaded = true; }
+      changeAnchorPart({
+        metadata: ( done ? 'disabled' : 'enabled' )
+      });
     });
   };
   // ---------- END EVENT HANDLERS ---------------------------------------------
@@ -408,7 +440,7 @@ var shell = (function(){
     setJQueryMap($container);
 
     // bind file change HANDLERS
-    jqueryMap.$munge_meta_input.change(onMetaFileChange);
+    jqueryMap.$munge_metadata_input.change(onMetaFileChange);
     jqueryMap.$munge_data_input.change(onDataFilesChange);
 
     // configure uriAnchor to use our schema
@@ -424,6 +456,7 @@ var shell = (function(){
     $(window)
       .bind( 'hashchange', onHashchange )
       .trigger( 'hashchange' );
+    changeAnchorPart({ metadata: 'enabled', data: 'disabled' });
   };
   // ---------- END PUBLIC METHODS --------------------------------------------
 
