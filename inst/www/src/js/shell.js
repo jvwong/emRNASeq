@@ -14,6 +14,7 @@ var shell = (function(){
     template : String() +
       '<div class="container em-shell">' +
         '<div class="em-shell-munge"></div>' +
+        '<button class="btn btn-danger btn-lg btn-block" id="em-shell-clear">Clear All</button>' +
       '</div>'
   },
   stateMap = {
@@ -23,6 +24,7 @@ var shell = (function(){
   jqueryMap = {},
   copyAnchorMap,
   setJQueryMap,
+  clearInput,
   changeAnchorPart,
   onHashchange,
   setDataAnchor,
@@ -40,14 +42,25 @@ var shell = (function(){
 
   // ---------- BEGIN DOM METHODS ----------------------------------------------
   // Begin DOM method /setJQueryMap/
-  setJQueryMap = function($container){
+  setJQueryMap = function( $container ){
     jqueryMap = {
       $container              : $container,
       $shell                  : $container.find('.em-shell'),
-      $munge_container        : $container.find('.em-shell .em-shell-munge')
+      $munge_container        : $container.find('.em-shell .em-shell-munge'),
+      $shell_clear            : $container.find('.em-shell #em-shell-clear')
     };
   };
   // End DOM method /setJQueryMap/
+
+  // Begin DOM method /clearInput/
+  /* Clears the input and resets the state to ground zero
+   *
+   * @return  boolean Whether the anchor portion could be updated
+   */
+  clearInput = function(){
+    return munge.reset( jqueryMap.$munge_container );
+  };
+  // End DOM method /clearInput/
 
   // Begin DOM method /changeAnchorPart/
   /* Changes part of the URI anchor component
@@ -208,7 +221,7 @@ var shell = (function(){
 
     // configure and initialize feature modules
     munge.configModule({
-      set_data_anchor : setDataAnchor,
+      set_data_anchor     : setDataAnchor,
       set_metadata_anchor : setMetadataAnchor,
      });
     munge.initModule( ocpu, jqueryMap.$munge_container );
@@ -220,7 +233,10 @@ var shell = (function(){
     $(window)
       .bind( 'hashchange', onHashchange )
       .trigger( 'hashchange' );
+    setMetadataAnchor( 'enabled' );
     setDataAnchor( 'disabled' );
+
+    jqueryMap.$shell_clear.click( clearInput );
   };
   // ---------- END PUBLIC METHODS --------------------------------------------
 

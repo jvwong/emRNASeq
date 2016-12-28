@@ -82,8 +82,13 @@ var munge = (function(){
   setJQueryMap,
   configModule,
   toggleInput,
-  onMetaFileChange, processMetaFile, onDataFilesChange, processDataFiles,
-  displayAsTable, displayAsPrint,
+  reset,
+  onMetaFileChange,
+  processMetaFile,
+  onDataFilesChange,
+  processDataFiles,
+  displayAsTable,
+  displayAsPrint,
   initModule;
   // ---------- END MODULE SCOPE VARIABLES -------------------------------------
 
@@ -302,6 +307,32 @@ var munge = (function(){
   };
   // End public method /toggleInput/
 
+  // Begin public method /reset/
+  /* Return to the ground state
+   *
+   * @return boolean
+   */
+  reset = function( $container ) {
+    $container.html( configMap.template );
+    setJQueryMap( $container );
+
+    // must clear out stateMap references
+    stateMap.metadata_session = undefined;
+    stateMap.metadata_file    = undefined;
+    stateMap.data_session     = undefined;
+    stateMap.data_file        = undefined;
+
+    //rebind listeners
+    jqueryMap.$munge_metadata_input.change(onMetaFileChange);
+    jqueryMap.$munge_data_input.change(onDataFilesChange);
+
+    // reset anchors
+    configMap.set_metadata_anchor( 'enabled' );
+    configMap.set_data_anchor( 'disabled' );
+    return true;
+  };
+  // End public method /reset/
+
 
   // Begin public method /configModule/
   // Example   : spa.chat.configModule({ slider_open_em : 18 });
@@ -353,7 +384,8 @@ var munge = (function(){
   return {
     initModule      : initModule,
     configModule    : configModule,
-    toggleInput     : toggleInput
+    toggleInput     : toggleInput,
+    reset           : reset
   };
 
 }());
