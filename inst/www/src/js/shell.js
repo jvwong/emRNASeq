@@ -13,7 +13,7 @@ var shell = (function(){
     },
     template : String() +
       '<div class="container em-shell">' +
-        '<button class="btn btn-danger pull-right" id="em-shell-clear">Reset</button>' +
+        '<button class="btn btn-danger pull-right em-shell-clear">Reset</button>' +
         '<div class="em-shell-munge"></div>' +
       '</div>'
   },
@@ -46,8 +46,8 @@ var shell = (function(){
     jqueryMap = {
       $container              : $container,
       $shell                  : $container.find('.em-shell'),
-      $munge_container        : $container.find('.em-shell .em-shell-munge'),
-      $shell_clear            : $container.find('.em-shell #em-shell-clear')
+      $shell_clear            : $container.find('.em-shell .em-shell-clear'),
+      $munge_container        : $container.find('.em-shell .em-shell-munge')
     };
   };
   // End DOM method /setJQueryMap/
