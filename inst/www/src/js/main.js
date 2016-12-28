@@ -1,4 +1,8 @@
 "use strict";
+window.jQuery = window.$ = require('jquery');
+require('bootstrap');
+require('datatables.net-bs')( window, $ );
+require('jquery.urianchor');
 
 var shell = require('./shell');
 var ocpu = require('../lib/opencpu.js');

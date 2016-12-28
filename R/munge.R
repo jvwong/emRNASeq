@@ -5,18 +5,18 @@
 #' and class assignment. Only accepts pair-wise comparison so there must be
 #' exactly 2 classes.
 #'
-#' @param meta_file a path to a tab-delimited metadata file
+#' @param metadata_file a path to a tab-delimited metadata file
 #' @return A data frame
 #'
 #' @export
-create_meta <- function(meta_file) {
+create_meta <- function(metadata_file) {
 
-  if(!file.exists(meta_file)) stop('file does not exist')
-  if(!grepl(".txt$", meta_file)){
+  if(!file.exists(metadata_file)) stop('file does not exist')
+  if(!grepl(".txt$", metadata_file)){
     stop("Uploaded file must be a tab-delimited .txt file!")
   }
 
-  meta <- read.table(meta_file,
+  meta <- read.table(metadata_file,
     check.names = FALSE,
     colClasses = c("character", "factor"),
     sep = "\t", header=TRUE)
@@ -36,17 +36,17 @@ create_meta <- function(meta_file) {
 #' is a corresponding filename and class assignment. Only accepts pair-wise
 #' comparison so there must be exactly 2 classes.
 #'
-#' @param meta_file A metadata file
+#' @param metadata_file A metadata file
 #' @param species A character array indicating the species with which to fetch gene models from bioMart, If NULL this mapping will not be performed
 #'
 #' @return A \code{\link[SummarizedExperiment]{SummarizedExperiment}}
 #'
 #' @export
-merge_data <- function(meta_file, species = NULL, ...) {
+merge_data <- function(metadata_file, species = NULL, ...) {
 
   i <- 0
   class_order <- c()
-  meta <- create_meta(meta_file)
+  meta <- create_meta(metadata_file)
 
   filelist <- list(...)
   if(is.list(filelist)){

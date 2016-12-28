@@ -4,10 +4,10 @@
 \alias{merge_data}
 \title{Merge a set of HT-Seq RNA expression files}
 \usage{
-merge_data(meta_file, species = NULL, ...)
+merge_data(metadata_file, species = NULL, ...)
 }
 \arguments{
-\item{meta_file}{A metadata file}
+\item{metadata_file}{A metadata file}
 
 \item{species}{A character array indicating the species with which to fetch gene models from bioMart, If NULL this mapping will not be performed}
 }

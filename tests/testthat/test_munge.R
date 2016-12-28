@@ -4,14 +4,14 @@ context("metadata munging")
 
 ### merge_data
 data_dir <- file.path(getwd(), "data")
-meta_file <- file.path(data_dir, "gitr_phenotypes.txt")
+metadata_file <- file.path(data_dir, "gitr_phenotypes.txt")
 filelist <- c(file.path(data_dir, "SMARTA_GITR_KO_1_htsqct.txt"),
   file.path(data_dir, "SMARTA_GITR_KO_2_htsqct.txt"),
   file.path(data_dir, "SMARTA_GITR_KO_3_htsqct.txt"),
   file.path(data_dir, "SMARTA_GITR_WT_1_htsqct.txt"),
   file.path(data_dir, "SMARTA_GITR_WT_2_htsqct.txt"),
   file.path(data_dir, "SMARTA_GITR_WT_3_htsqct.txt"))
-sample_merged_se <- emRNASeq::merge_data(meta_file, species = NULL, filelist)
+sample_merged_se <- emRNASeq::merge_data(metadata_file, species = NULL, filelist)
 
 test_that("merge_data requires valid params", {
   expect_error(emRNASeq::merge_data(sample_meta_df, NULL))

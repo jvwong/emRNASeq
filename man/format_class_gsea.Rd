@@ -4,12 +4,12 @@
 \alias{format_class_gsea}
 \title{Generate categorical class text file content}
 \usage{
-format_class_gsea(dge, de_tested_tt)
+format_class_gsea(filtered_dge, de_tested_tt)
 }
 \arguments{
-\item{dge}{A \code{\link[edgeR]{DGEList}}, typically a filtered version coming out of  \code{\link{filter_rseq}}}
+\item{filtered_dge}{A \code{\link[edgeR]{DGEList}}, typically a filtered version coming out of  \code{\link{filter_rseq}}}
 
-\item{tested_tt}{A \code{\link[edgeR]{TopTags}}}
+\item{de_tested_tt}{A \code{\link[edgeR]{TopTags}}}
 }
 \value{
 a matrix

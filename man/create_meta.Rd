@@ -4,10 +4,10 @@
 \alias{create_meta}
 \title{Create a data frame housing the RNA-seq metadata}
 \usage{
-create_meta(meta_file)
+create_meta(metadata_file)
 }
 \arguments{
-\item{meta_file}{a path to a tab-delimited metadata file}
+\item{metadata_file}{a path to a tab-delimited metadata file}
 }
 \value{
 A data frame

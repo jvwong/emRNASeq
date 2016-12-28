@@ -4,12 +4,12 @@
 \alias{de_test_rseq}
 \title{Perform a pair-wise differential expression test on RNA-seq data}
 \usage{
-de_test_rseq(dge, comparison)
+de_test_rseq(normalized_dge, comparison)
 }
 \arguments{
-\item{comparison}{A two-element array indicating the 'baseline' and 'test' classes IN THAT ORDER. DE testing  will be performed relative to baseline (element 2 vs 1).}
+\item{normalized_dge}{A \code{\link[edgeR]{DGEList}}, typically the output of \code{\link[edgeR]{calcNormFactors}}}
 
-\item{se}{A \code{\link[edgeR]{DGEList}}}
+\item{comparison}{A two-element array indicating the 'baseline' and 'test' classes IN THAT ORDER. DE testing  will be performed relative to baseline (element 2 vs 1).}
 }
 \value{
 the fitted and adjusted \code{\link[edgeR]{TopTags}} object

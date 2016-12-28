@@ -4,10 +4,10 @@
 \alias{format_expression_gsea}
 \title{Generate an expression text file content}
 \usage{
-format_expression_gsea(dge)
+format_expression_gsea(normalized_dge)
 }
 \arguments{
-\item{dge}{A \code{\link[edgeR]{DGEList}}, typically the result of \code{\link[edgeR]{calcNormFactors}}}
+\item{normalized_dge}{A \code{\link[edgeR]{DGEList}}, typically the result of \code{\link[edgeR]{calcNormFactors}}}
 }
 \value{
 a \code{\link[base]{data.frame}} of the expression data
