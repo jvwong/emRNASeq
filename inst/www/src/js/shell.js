@@ -13,8 +13,8 @@ var shell = (function(){
     },
     template : String() +
       '<div class="container em-shell">' +
+        '<button class="btn btn-danger pull-right" id="em-shell-clear">Reset</button>' +
         '<div class="em-shell-munge"></div>' +
-        '<button class="btn btn-danger btn-lg btn-block" id="em-shell-clear">Clear All</button>' +
       '</div>'
   },
   stateMap = {
@@ -110,6 +110,7 @@ var shell = (function(){
         bool_return = false;
       }
 
+      onHashchange(); //call manually
       return bool_return;
    };
   // End DOM method /changeAnchorPart/
@@ -225,18 +226,14 @@ var shell = (function(){
       set_metadata_anchor : setMetadataAnchor,
      });
     munge.initModule( ocpu, jqueryMap.$munge_container );
+    jqueryMap.$shell_clear.click( clearInput );
 
     // Handles URI anchor change events.
     // This is done /after/ all feature modules are configured and init'd,
     // otherwise they will not be ready to handle the trigger event, which is
     // used to ensure the anchor is considered on-load
-    $(window)
-      .bind( 'hashchange', onHashchange )
-      .trigger( 'hashchange' );
-    setMetadataAnchor( 'enabled' );
-    setDataAnchor( 'disabled' );
-
-    jqueryMap.$shell_clear.click( clearInput );
+    $( window )
+      .bind( 'hashchange', onHashchange );
   };
   // ---------- END PUBLIC METHODS --------------------------------------------
 
