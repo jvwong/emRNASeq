@@ -138,7 +138,7 @@ var munge = (function(){
       var $panel = $(configMap.panel_template);
       $panel.find('.panel-title').text(text);
       $panel.find('.panel-body').append($table);
-      $container.replaceWith($panel);
+      $container.append($panel);
       $table.DataTable({
             "aaData": data,
             "aoColumns": aoColumns
@@ -159,7 +159,7 @@ var munge = (function(){
       $panel.find('.panel-body').append($code);
       $panel.find('.panel-footer').append('<a type="button" class="btn btn-default" href="' +
        session.getLoc() + 'R/.val/rds">Download (.rds)</a>');
-      $container.replaceWith($panel);
+      $container.append($panel);
     });
   };
   // End DOM method /displayAsPrint/
@@ -230,15 +230,18 @@ var munge = (function(){
     }
 
     //perform the request
-    var jqxhr = stateMap.ocpu.call('merge_data', args, function(session){
-      stateMap.data_session = session;
-      displayAsPrint('Results',
-        stateMap.data_session,
-        jqueryMap.$munge_data_results);
+    var jqxhr = stateMap.ocpu.call('merge_data',
+      args,
+      function(session){
+        stateMap.data_session = session;
+        jqueryMap.$munge_data_results.empty();
+        displayAsPrint('Results',
+          stateMap.data_session,
+          jqueryMap.$munge_data_results);
     });
 
     jqxhr.done(function(){
-      jqueryMap.$munge_data_help.text('Files merged: ' + stateMap.data_file.length);
+      // jqueryMap.$munge_data_help.text('Files merged: ' + stateMap.data_file.length);
       cb(true);
     });
 
@@ -258,7 +261,8 @@ var munge = (function(){
   // ---------- BEGIN EVENT HANDLERS -------------------------------------------
   onMetaFileChange = function(){
     var
-    file = $(this)[0].files[0];
+    self = $(this),
+    file = self[0].files[0];
     return processMetaFile(file, function( done ){
       if( !done || !stateMap.metadata_session ) { return false; }
       configMap.set_data_anchor( 'enabled' );
@@ -266,7 +270,8 @@ var munge = (function(){
   };
 
   onDataFilesChange = function(){
-    var files = $(this)[0].files,
+    var self = $(this),
+    files = self[0].files,
     species = jqueryMap.$munge_spec_input.val() || null;
     return processDataFiles(files, species, function(done){
       if( !done ){ return false; }
@@ -383,7 +388,6 @@ var munge = (function(){
     // bind file change HANDLERS
     jqueryMap.$munge_metadata_input.change(onMetaFileChange);
     jqueryMap.$munge_data_input.change(onDataFilesChange);
-
     reset( $container );
   };
   // ---------- END PUBLIC METHODS --------------------------------------------
