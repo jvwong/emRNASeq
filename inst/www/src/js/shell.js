@@ -13,8 +13,9 @@ var shell = (function(){
     },
     template : String() +
       '<div class="container em-shell">' +
-        '<button class="btn btn-danger pull-right em-shell-clear">Reset</button>' +
+        '<button class="btn btn-danger pull-right em-shell-clear ajax-sensitive">Reset</button>' +
         '<div class="em-shell-munge"></div>' +
+        '<div class="em-shell-rnaseq"></div>' +
       '</div>'
   },
   stateMap = {
@@ -56,8 +57,8 @@ var shell = (function(){
    *
    * @return  boolean Whether the anchor portion could be updated
    */
-  clearInput = function(){
-    return munge.reset( jqueryMap.$munge_container );
+  clearInput = function( ){
+    return munge.reset( );
   };
   // End DOM method /clearInput/
 
@@ -142,12 +143,13 @@ var shell = (function(){
       Object.getOwnPropertyNames( configMap.anchor_schema_map )
         .forEach(function(val){
           var
-          _s_x_previous = '_s_' + val,
-          _s_x_proposed = '_s_' + val,
+          _s_x_key = '_s_' + val,
+          _s_x_previous,
+          _s_x_proposed,
           s_x_proposed;
 
-          _s_x_previous = anchor_map_previous[_s_x_previous];
-          _s_x_proposed = anchor_map_proposed[_s_x_proposed];
+          _s_x_previous = anchor_map_previous[_s_x_key];
+          _s_x_proposed = anchor_map_proposed[_s_x_key];
 
           if ( ! anchor_map_previous || _s_x_previous !== _s_x_proposed){
             s_x_proposed = anchor_map_proposed[val];
