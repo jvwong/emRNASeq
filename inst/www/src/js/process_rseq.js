@@ -1,7 +1,7 @@
 "use strict";
 
 var util = require('./util.js');
-var modulename = (function(){
+var process_rseq = (function(){
 
   // ---------- BEGIN MODULE SCOPE VARIABLES -----------------------------------
   var
@@ -9,7 +9,9 @@ var modulename = (function(){
     anchor_schema_map : {
     },
     template : String() +
-      '<div class="module-name">' +
+      '<div class="em-process_rseq">' +
+        '<h3>Hi!</h3>' +
+        '<div id="em-process_rseq-listener"></div>' +
       '</div>',
     settable_map : {}
   },
@@ -19,6 +21,9 @@ var modulename = (function(){
   reset,
   setJQueryMap,
   configModule,
+
+  onDataReceive,
+
   initModule;
   // ---------- END MODULE SCOPE VARIABLES -------------------------------------
 
@@ -27,13 +32,21 @@ var modulename = (function(){
   // Begin DOM method /setJQueryMap/
   setJQueryMap = function( $container ){
     jqueryMap = {
-      $container                : $container
+      $container              : $container,
+      $process_rseq_listener  : $container.find('.em-process #em-process_rseq-listener')
     };
   };
   // End DOM method /setJQueryMap/
   // ---------- END DOM METHODS ------------------------------------------------
 
   // ---------- BEGIN EVENT HANDLERS -------------------------------------------
+  onDataReceive = function( event, msg_map ){
+    console.info(
+      'message received',
+      event,
+      msg_map
+    );
+  };
   // ---------- END EVENT HANDLERS ---------------------------------------------
 
   // ---------- BEGIN PUBLIC METHODS -------------------------------------------
@@ -42,7 +55,7 @@ var modulename = (function(){
    *
    * @return boolean
    */
-  reset = function( ) {  
+  reset = function( ) {
     return true;
   };
   // End public method /reset/
@@ -80,11 +93,9 @@ var modulename = (function(){
   // End public method /configModule/
 
   /* initModule
-   * @param ocpu (Object) ocpu singleton
    * @param $container (Object) jQuery parent
    */
-  initModule = function(ocpu, $container){
-    stateMap.ocpu = ocpu;
+  initModule = function( $container ){
     $container.html( configMap.template );
     setJQueryMap( $container );
   };
@@ -98,4 +109,4 @@ var modulename = (function(){
 
 }());
 
-module.exports = modulename;
+module.exports = process_rseq;

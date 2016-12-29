@@ -82,12 +82,11 @@ var munge = (function(){
   },
 
   stateMap = {
-    ocpu                    : undefined,
     anchor_map              : {},
     metadata_session        : undefined,
     metadata_file           : undefined,
     data_session            : undefined,
-    data_file               : undefined
+    data_files               : undefined
   },
   jqueryMap = {},
   setJQueryMap,
@@ -95,8 +94,10 @@ var munge = (function(){
   toggleInput,
   reset,
   onMetaFileChange,
+  onMetadataProcessed,
   processMetaFile,
   onDataFilesChange,
+  onDataProcessed,
   processDataFiles,
   displayAsTable,
   displayAsPrint,
@@ -177,17 +178,17 @@ var munge = (function(){
   // End DOM method /displayAsPrint/
 
   // Begin DOM method /processMetaFile/
-  processMetaFile = function(file, cb){
-    if(!file){
+  processMetaFile = function( data, cb ){
+    if( !data.hasOwnProperty('files') || !data.files.length ){
       alert('No file selected.');
       return;
     }
 
-    stateMap.metadata_file = file;
+    stateMap.metadata_file = data.files[0];
 
     //perform the request
-    var jqxhr = stateMap.ocpu.call('create_meta', {
-      metadata_file : file
+    var jqxhr = ocpu.call('create_meta', {
+      metadata_file : stateMap.metadata_file
     }, function(session){
       stateMap.metadata_session = session;
       displayAsTable('Results',
@@ -197,8 +198,8 @@ var munge = (function(){
 
     jqxhr.done(function(){
       //clear any previous help messages
-      jqueryMap.$munge_metadata_help.text(file.name);
-      cb(true);
+      jqueryMap.$munge_metadata_help.text(stateMap.metadata_file.name);
+      cb( stateMap.metadata_session );
     });
 
     jqxhr.fail(function(){
@@ -206,7 +207,7 @@ var munge = (function(){
       console.error(errText);
       jqueryMap.$munge_metadata_help.text(errText);
       jqueryMap.$munge_metadata_results.empty();
-      cb(false);
+      cb( false );
     });
 
     return true;
@@ -214,34 +215,36 @@ var munge = (function(){
   // End DOM method /processMetaFile/
 
   // Begin DOM method /processDataFiles/
-  processDataFiles = function(files, species, cb){
+  processDataFiles = function( data, cb ){
 
-    if(!files.length){
+    if( !data.hasOwnProperty('species') ||
+        !data.hasOwnProperty('files') ||
+        !data.files.length ){
       alert('No file(s) selected.');
       return;
     }
 
-    if(!stateMap.metadata_file){
+    if( !stateMap.metadata_file ){
       alert('Please load metadata.');
       return;
     }
 
-    stateMap.data_file = files;
+    stateMap.data_files = data.files;
 
     // opencpu only accepts single files as arguments
     var args = {
       metadata_file   : stateMap.metadata_file,
-      species         : species
+      species         : data.species
     };
 
     // loop through files
-    for (var i = 0; i < files.length; i++) {
-        var file = files.item(i);
+    for (var i = 0; i < stateMap.data_files.length; i++) {
+        var file = stateMap.data_files.item(i);
         args['file' + i] = file;
     }
 
     //perform the request
-    var jqxhr = stateMap.ocpu.call('merge_data',
+    var jqxhr = ocpu.call('merge_data',
       args,
       function(session){
         stateMap.data_session = session;
@@ -251,8 +254,8 @@ var munge = (function(){
     });
 
     jqxhr.done(function(){
-      jqueryMap.$munge_data_help.text('Files merged: ' + stateMap.data_file.length);
-      cb(true);
+      jqueryMap.$munge_data_help.text('Files merged: ' + stateMap.data_files.length);
+      cb( stateMap.data_session );
     });
 
     jqxhr.fail(function(){
@@ -260,7 +263,7 @@ var munge = (function(){
       console.error(errText);
       jqueryMap.$munge_data_help.text(errText);
       jqueryMap.$munge_data_results.empty();
-      cb(false);
+      cb( false );
     });
 
     return true;
@@ -272,22 +275,33 @@ var munge = (function(){
   onMetaFileChange = function(){
     var
     self = $(this),
-    file = self[0].files[0];
-    return processMetaFile(file, function( done ){
-      if( !done || !stateMap.metadata_session ) { return false; }
-      configMap.set_anchor( 'data', 'enabled' );
-    });
+    data = {
+      files   : self[0].files,
+    };
+    return processMetaFile( data, onMetadataProcessed );
+  };
+
+  onMetadataProcessed = function( session ){
+    if( !session ) { return false; }
+    configMap.set_anchor( 'data', 'enabled' );
+    return true;
   };
 
   onDataFilesChange = function(){
     var self = $(this),
-    files = self[0].files,
-    species = jqueryMap.$munge_spec_input.val().trim().toLowerCase() || null;
-    return processDataFiles(files, species, function(done){
-      if( !done ){ return false; }
-      configMap.set_anchor( 'metadata', 'disabled' );
-      configMap.set_anchor( 'data', 'disabled' );
-    });
+    data = {
+      files   : self[0].files,
+      species : jqueryMap.$munge_spec_input.val().trim().toLowerCase() || null
+    };
+    return processDataFiles( data, onDataProcessed );
+  };
+
+  onDataProcessed = function( session ){
+    if( !session ){ return false; }
+    configMap.set_anchor( 'metadata', 'disabled' );
+    configMap.set_anchor( 'data', 'disabled' );
+    $.gevent.publish( 'em-munge-data', { session : session } );
+    return true;
   };
   // ---------- END EVENT HANDLERS ---------------------------------------------
 
@@ -351,7 +365,7 @@ var munge = (function(){
     stateMap.metadata_session = undefined;
     stateMap.metadata_file    = undefined;
     stateMap.data_session     = undefined;
-    stateMap.data_file        = undefined;
+    stateMap.data_files        = undefined;
 
     // reset anchors
     configMap.set_anchor( 'data', 'disabled' );
@@ -362,26 +376,11 @@ var munge = (function(){
 
 
   // Begin public method /configModule/
-  // Example   : spa.chat.configModule({ slider_open_em : 18 });
-  // Purpose   : Configure the module prior to initialization
-  // Arguments :
-  //   * set_chat_anchor - a callback to modify the URI anchor to
-  //     indicate opened or closed state. This callback must return
-  //     false if the requested state cannot be met
-  //   * chat_model - the chat model object provides methods
-  //       to interact with our instant messaging
-  //   * people_model - the people model object which provides
-  //       methods to manage the list of people the model maintains
-  //   * slider_* settings. All these are optional scalars.
-  //       See mapConfig.settable_map for a full list
-  //       Example: slider_open_em is the open height in em's
-  // Action    :
-  //   The internal configuration data structure (configMap) is
-  //   updated with provided arguments. No other actions are taken.
-  // Returns   : true
-  // Throws    : JavaScript error object and stack trace on
-  //             unacceptable or missing arguments
-  //
+  /* The internal configuration data structure (configMap) is
+   * updated with provided arguments. No other actions are taken.
+   *
+   * @return true if updated successfully
+   */
   configModule = function ( input_map ) {
     util.setConfigMap({
       input_map    : input_map,
@@ -396,8 +395,7 @@ var munge = (function(){
    * @param ocpu (Object) ocpu singleton
    * @param $container (Object) jQuery parent
    */
-  initModule = function(ocpu, $container){
-    stateMap.ocpu = ocpu;
+  initModule = function( $container ){
     $container.html( configMap.template );
     setJQueryMap( $container );
 

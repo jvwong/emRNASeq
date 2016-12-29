@@ -1,5 +1,6 @@
 "use strict";
 var munge = require('./munge.js');
+var process_rseq = require('./process_rseq.js');
 
 //init this script when the page has loaded
 var shell = (function(){
@@ -15,11 +16,10 @@ var shell = (function(){
       '<div class="container em-shell">' +
         '<button class="btn btn-danger pull-right em-shell-clear ajax-sensitive">Reset</button>' +
         '<div class="em-shell-munge"></div>' +
-        '<div class="em-shell-rnaseq"></div>' +
+        '<div class="em-shell-process_rseq"></div>' +
       '</div>'
   },
   stateMap = {
-    ocpu                : undefined,
     anchor_map          : {}
   },
   jqueryMap = {},
@@ -44,10 +44,11 @@ var shell = (function(){
   // Begin DOM method /setJQueryMap/
   setJQueryMap = function( $container ){
     jqueryMap = {
-      $container              : $container,
-      $shell                  : $container.find('.em-shell'),
-      $shell_clear            : $container.find('.em-shell .em-shell-clear'),
-      $munge_container        : $container.find('.em-shell .em-shell-munge')
+      $container                : $container,
+      $shell                    : $container.find('.em-shell'),
+      $shell_clear              : $container.find('.em-shell .em-shell-clear'),
+      $munge_container          : $container.find('.em-shell .em-shell-munge'),
+      $process_rseq_container   : $container.find('.em-shell .em-shell-process_rseq')
     };
   };
   // End DOM method /setJQueryMap/
@@ -194,14 +195,12 @@ var shell = (function(){
   // ---------- BEGIN PUBLIC METHODS -------------------------------------------
 
   /* initModule
-   * @param ocpu (Object) ocpu singleton
    * @param path (String) path
    * @param $container (Object) jQuery parent
    */
-  initModule = function(ocpu, path, $container){
-    stateMap.ocpu = ocpu;
+  initModule = function(path, $container){
     if(path){
-      stateMap.ocpu.seturl(path);
+      ocpu.seturl(path);
     }
     $container.html( configMap.template );
     setJQueryMap( $container );
@@ -213,8 +212,19 @@ var shell = (function(){
     munge.configModule({
       set_anchor     : setAnchor
      });
-    munge.initModule( ocpu, jqueryMap.$munge_container );
+    munge.initModule( jqueryMap.$munge_container );
     jqueryMap.$shell_clear.click( clearInput );
+
+    $.gevent.subscribe(
+      $container,
+      'em-munge-data',
+      function ( event, msg_map ) {
+        console.log('message received');
+        console.log( msg_map.session );
+        process_rseq.configModule({});
+        process_rseq.initModule( jqueryMap.$process_rseq_container );
+      }
+    );
 
     // Handles URI anchor change events.
     // This is done /after/ all feature modules are configured and init'd,
