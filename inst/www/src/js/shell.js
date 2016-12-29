@@ -27,8 +27,7 @@ var shell = (function(){
   clearInput,
   changeAnchorPart,
   onHashchange,
-  setDataAnchor,
-  setMetadataAnchor,
+  setAnchor,
   initModule;
   // ---------- END MODULE SCOPE VARIABLES -------------------------------------
 
@@ -173,33 +172,21 @@ var shell = (function(){
   // ---------- END EVENT HANDLERS ---------------------------------------------
 
   //---------------------- BEGIN CALLBACKS ---------------------
-  /* Begin callback method /setDataAnchor/
+  /* Begin callback method /setAnchor/
    *    Changes the URI anchor parameter 'data' to the requested
    *    value if possible.
-   *  Example  : setDataAnchor( 'enabled' );
+   *  Example  : setAnchor( 'enabled' );
    *  Purpose  : Change the data component of the anchor
    *  @param string 'enabled' or 'disabled'
    *  @return boolean true  - requested anchor part was updated; false -
    *  requested anchor part was not updated
    **/
-   setDataAnchor = function ( position_type ){
-     return changeAnchorPart({ data : position_type });
+   setAnchor = function ( label, position_type ){
+     var obj = {};
+     obj[label] = position_type;
+     return changeAnchorPart( obj );
    };
-  // End callback method /setDataAnchor/
-
-  /* Begin callback method /setMetadataAnchor/
-   *    Changes the URI anchor parameter 'metadata' to the requested
-   *    value if possible.
-   *  Example  : setMetadataAnchor( 'enabled' );
-   *  Purpose  : Change the metadata component of the anchor
-   *  @param string 'enabled' or 'disabled'
-   *  @return boolean true  - requested anchor part was updated; false -
-   *  requested anchor part was not updated
-   **/
-   setMetadataAnchor = function ( position_type ){
-     return changeAnchorPart({ metadata : position_type });
-   };
-  // End callback method /setMetadataAnchor/
+  // End callback method /setAnchor/
   //----------------------- END CALLBACKS ----------------------
 
   // ---------- BEGIN PUBLIC METHODS -------------------------------------------
@@ -222,8 +209,7 @@ var shell = (function(){
 
     // configure and initialize feature modules
     munge.configModule({
-      set_data_anchor     : setDataAnchor,
-      set_metadata_anchor : setMetadataAnchor,
+      set_anchor     : setAnchor
      });
     munge.initModule( ocpu, jqueryMap.$munge_container );
     jqueryMap.$shell_clear.click( clearInput );

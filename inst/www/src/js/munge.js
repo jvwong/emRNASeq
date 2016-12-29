@@ -18,29 +18,40 @@ var munge = (function(){
       '<div class="em-munge">' +
         '<h2>Data Munge <small>Upload RNA sequencing (meta)data</small></h2>' +
         '<hr/>' +
-
         '<form>' +
-          '<div class="form-group em-munge-species">' +
-            '<label for="em-munge-species-input">Species</label>' +
-            '<input type="text" class="form-control" placeholder="Optional">' +
-            '<p class="help-block"></p>' +
-          '</div>' +
-          '<div class="form-group em-munge-meta">' +
-            '<h3>Metadata</h3>' +
-            '<label class="btn btn-primary btn-file btn-lg btn-block" for="em-munge-meta-input">Load Metadata</label>' +
-            '<input type="file" class="form-control" style="display: none;" id="em-munge-meta-input" >' +
-            '<p class="help-block"><small>Tab-delimited (.txt). Headers for \'id\' (filenames) and \'class\'</small></p>' +
+          '<fieldset class="form-group">' +
+            '<legend>Metadata Input</legend>' +
+            '<div class="em-munge-meta row">' +
+              '<label class="col-sm-2 col-form-label">File</label>' +
+              '<div class="col-sm-10">' +
+                '<label class="btn btn-primary btn-file btn-md btn-block" for="em-munge-meta-input">Select</label>' +
+                '<input type="file" class="form-control-file" style="display: none;" id="em-munge-meta-input" >' +
+                '<p class="help-block"><small>Tab-delimited (.txt). Headers for \'id\' (filenames) and \'class\'</small></p>' +
+              '</div>' +
+            '</div>' +
             '<div class="form-group em-munge-meta-results"></div>' +
-          '</div>' +
-          '<div class="form-group em-munge-data">' +
-            '<h3>Data</h3>' +
-            '<label class="btn btn-primary btn-file btn-lg btn-block" for="em-munge-data-input" disabled>Load Data</label>' +
-            '<input type="file" class="form-control" style="display: none;" id="em-munge-data-input" disabled multiple>' +
-            '<p class="help-block"><small>Tab-delimited (.txt). Each row is gene name and count</small></p>' +
+          '</fieldset>' +
+
+          '<fieldset class="form-group">' +
+            '<legend>Data Input</legend>' +
+            '<div class="em-munge-species row">' +
+              '<label for="em-munge-species-input" class="col-sm-2 col-form-label">Species &nbsp</label>' +
+              '<div class="col-sm-10">' +
+                '<input type="text" class="form-control" placeholder="e.g. \'mouse\' (optional)">' +
+                '<p class="help-block"></p>' +
+              '</div>' +
+            '</div>' +
+            '<div class="em-munge-data row">' +
+              '<label class="col-sm-2 col-form-label">File</label>' +
+              '<div class="col-sm-10">' +
+                '<label class="btn btn-primary btn-file btn-md btn-block" for="em-munge-data-input">Select</label>' +
+                '<input type="file" class="form-control-file" style="display: none;" id="em-munge-data-input" disabled multiple>' +
+                '<p class="help-block"><small>Tab-delimited (.txt). Each row is gene name and count</small></p>' +
+              '</div>' +
+            '</div>' +
             '<div class="form-group em-munge-data-results"></div>' +
-          '</div>' +
+          '</fieldset>' +
         '</form>' +
-        '<hr/>' +
       '</div>',
 
     table_template : String() +
@@ -63,11 +74,9 @@ var munge = (function(){
         '</div>',
 
     settable_map : {
-      set_data_anchor       : true,
-      set_metadata_anchor   : true
+      set_anchor            : true
     },
-    set_data_anchor         : null,
-    set_metadata_anchor     : null
+    set_anchor              : null
   },
 
   stateMap = {
@@ -138,6 +147,7 @@ var munge = (function(){
       var $panel = $(configMap.panel_template);
       $panel.find('.panel-title').text(text);
       $panel.find('.panel-body').append($table);
+      $container.empty();
       $container.append($panel);
       $table.DataTable({
             "aaData": data,
@@ -159,6 +169,7 @@ var munge = (function(){
       $panel.find('.panel-body').append($code);
       $panel.find('.panel-footer').append('<a type="button" class="btn btn-default" href="' +
        session.getLoc() + 'R/.val/rds">Download (.rds)</a>');
+      $container.empty();
       $container.append($panel);
     });
   };
@@ -178,7 +189,6 @@ var munge = (function(){
       metadata_file : file
     }, function(session){
       stateMap.metadata_session = session;
-      jqueryMap.$munge_metadata_results.empty();
       displayAsTable('Results',
         stateMap.metadata_session,
         jqueryMap.$munge_metadata_results);
@@ -234,14 +244,13 @@ var munge = (function(){
       args,
       function(session){
         stateMap.data_session = session;
-        jqueryMap.$munge_data_results.empty();
         displayAsPrint('Results',
           stateMap.data_session,
           jqueryMap.$munge_data_results);
     });
 
     jqxhr.done(function(){
-      // jqueryMap.$munge_data_help.text('Files merged: ' + stateMap.data_file.length);
+      jqueryMap.$munge_data_help.text('Files merged: ' + stateMap.data_file.length);
       cb(true);
     });
 
@@ -265,17 +274,17 @@ var munge = (function(){
     file = self[0].files[0];
     return processMetaFile(file, function( done ){
       if( !done || !stateMap.metadata_session ) { return false; }
-      configMap.set_data_anchor( 'enabled' );
+      configMap.set_anchor( 'data', 'enabled' );
     });
   };
 
   onDataFilesChange = function(){
     var self = $(this),
     files = self[0].files,
-    species = jqueryMap.$munge_spec_input.val() || null;
+    species = jqueryMap.$munge_spec_input.val().trim().toLowerCase() || null;
     return processDataFiles(files, species, function(done){
       if( !done ){ return false; }
-      configMap.set_metadata_anchor( 'disabled' );
+      configMap.set_anchor( 'metadata', 'disabled' );
     });
   };
   // ---------- END EVENT HANDLERS ---------------------------------------------
@@ -293,8 +302,12 @@ var munge = (function(){
    */
   toggleInput = function( label, do_enable ) {
     var $handles = label === 'data' ?
-      [ jqueryMap.$munge_data_label, jqueryMap.$munge_data_input ] :
-      [ jqueryMap.$munge_metadata_label, jqueryMap.$munge_metadata_input ];
+      [ jqueryMap.$munge_data_label,
+        jqueryMap.$munge_data_input,
+        jqueryMap.$munge_spec_input,
+        jqueryMap.$munge_spec_input ] :
+      [ jqueryMap.$munge_metadata_label,
+        jqueryMap.$munge_metadata_input ];
 
     $.each( $handles, function( index, value ){
       value.attr('disabled', !do_enable);
@@ -324,7 +337,6 @@ var munge = (function(){
    */
   reset = function( $container ) {
     $container.html( configMap.template );
-
     setJQueryMap( $container );
     //rebind listeners
     jqueryMap.$munge_metadata_input.change(onMetaFileChange);
@@ -337,8 +349,8 @@ var munge = (function(){
     stateMap.data_file        = undefined;
 
     // reset anchors
-    configMap.set_metadata_anchor( 'enabled' );
-    configMap.set_data_anchor( 'disabled' );
+    configMap.set_anchor( 'data', 'enabled' );
+    configMap.set_anchor( 'metadata', 'disabled' );
     return true;
   };
   // End public method /reset/
@@ -388,7 +400,8 @@ var munge = (function(){
     // bind file change HANDLERS
     jqueryMap.$munge_metadata_input.change(onMetaFileChange);
     jqueryMap.$munge_data_input.change(onDataFilesChange);
-    reset( $container );
+    configMap.set_anchor( 'data', 'disabled' );
+    configMap.set_anchor( 'metadata', 'enabled' );
   };
   // ---------- END PUBLIC METHODS --------------------------------------------
 
