@@ -15,8 +15,7 @@ var process_rseq = (function(){
       '</div>',
     settable_map : {}
   },
-  stateMap = {
-  },
+  // stateMap = {},
   jqueryMap = {},
   reset,
   setJQueryMap,
