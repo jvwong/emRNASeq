@@ -6,13 +6,11 @@ data_dir <- file.path(getwd(), "data")
 sample_merged_se <- readRDS(file = file.path(data_dir, "sample_merged_se.rds"))
 
 ### filter_rseq
-comparison <- c("WT", "KO")
-
 test_that("filter_rseq requires two classes", {
-  expect_error(filter_rseq(sample_merged_se, c("WT")))
+  expect_error(filter_rseq(sample_merged_se, "WT"))
 })
 
-sample_filtered_dge <- filter_rseq(sample_merged_se, comparison)
+sample_filtered_dge <- filter_rseq(sample_merged_se, "WT", "KO")
 test_that("filter_rseq requires two classes", {
   expect_is(sample_filtered_dge, "DGEList")
 })
@@ -27,7 +25,7 @@ test_that("de_test_rseq requires two classes", {
   expect_error(de_test_rseq(tmm_normalized_dge, c("WT")))
 })
 
-de_tested_tt <- de_test_rseq(tmm_normalized_dge, comparison)
+de_tested_tt <- de_test_rseq(tmm_normalized_dge, "WT", "KO")
 test_that("de_test_rseq returns a TopTags with correct attributes", {
   expect_gt(dim(de_tested_tt$table)[1], 1)
 })

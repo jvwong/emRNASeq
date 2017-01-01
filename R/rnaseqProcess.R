@@ -3,13 +3,15 @@
 #' Takes in a \code{\link[SummarizedExperiment]{SummarizedExperiment}} object containing RNA-seq data and filters for low counts (> 1 cpm in a minimum number of samples equal to the smallest group size)
 #'
 #' @param se A \code{\link[SummarizedExperiment]{SummarizedExperiment}}
-#' @param comparison A two-element array indicating the 'baseline' and 'test' classes IN THAT ORDER. DE testing  will be performed relative to baseline (element 2 vs 1).
-#'
+#' @param baseline character for the 'baseline' class
+#' @param test character for the 'test' class. DE testing will be performed relative to
+#' @param min_counts The minimum threshold in counts per million for each sample
 #' @return a filtered \code{\link[edgeR]{DGEList}}
 #'
 #' @export
-filter_rseq <- function(se, comparison){
+filter_rseq <- function(se, baseline, test, min_counts = 1){
 
+  comparison <- c(baseline, test)
   if(length(comparison) != 2){ stop("comparison must be length 2") }
 
   se_counts <- SummarizedExperiment::assays(se)$counts
@@ -23,9 +25,8 @@ filter_rseq <- function(se, comparison){
   index_test <- se_groups == comparison[1]
   index_baseline <- se_groups == comparison[2]
 
-  min_count_per_sample <- 1
   row_with_mincount <-
-    rowSums(edgeR::cpm(se_counts) > min_count_per_sample) >= min(sum(index_baseline), sum(index_test))
+    rowSums(edgeR::cpm(se_counts) > min_counts) >= min(sum(index_baseline), sum(index_test))
 
   dge_counts <- se_counts[row_with_mincount,]
   if(is(se, 'RangedSummarizedExperiment')){
@@ -45,13 +46,15 @@ filter_rseq <- function(se, comparison){
 #' Takes in a \code{\link[edgeR]{DGEList}} containing (normalized) RNA-seq data, performs a fit using \code{\link[edgeR]{estimateCommonDisp}} and \code{\link[edgeR]{estimateTagwiseDisp}}, a differential expression test via \code{\link[edgeR]{exactTest}} and multiple-testing correction using Benjamini-Hochberge method in \code{\link[edgeR]{topTags}}.
 #'
 #' @param normalized_dge A \code{\link[edgeR]{DGEList}}, typically the output of \code{\link[edgeR]{calcNormFactors}}
-#' @param comparison A two-element array indicating the 'baseline' and 'test' classes IN THAT ORDER. DE testing  will be performed relative to baseline (element 2 vs 1).
+#' @param baseline character for the 'baseline' class
+#' @param test character for the 'test' class. DE testing will be performed relative to
 #'
 #' @return the fitted and adjusted \code{\link[edgeR]{TopTags}} object
 #'
 #' @export
-de_test_rseq <- function(normalized_dge, comparison){
+de_test_rseq <- function(normalized_dge, baseline, test){
 
+  comparison <- c(baseline, test)
   if(length(comparison) != 2){ stop("comparison must be length 2") }
 
   fitted_commondisp_dge <- edgeR::estimateCommonDisp(normalized_dge)

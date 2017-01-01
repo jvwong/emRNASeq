@@ -1,6 +1,7 @@
 "use strict";
 
 var util = require('./util.js');
+var ocpu = require('../lib/opencpu.js/opencpu-0.5-npm.js');
 
 var munge = (function(){
 
@@ -74,10 +75,10 @@ var munge = (function(){
   },
 
   stateMap = {
-    metadata_session        : undefined,
-    metadata_file           : undefined,
-    data_session            : undefined,
-    data_files              : undefined
+    metadata_session        : null,
+    metadata_file           : null,
+    data_session            : null,
+    data_files              : null
   },
   jqueryMap = {},
   setJQueryMap,
@@ -91,7 +92,6 @@ var munge = (function(){
   onDataProcessed,
   processDataFiles,
   displayAsTable,
-  displayAsPrint,
   initModule;
   // ---------- END MODULE SCOPE VARIABLES -------------------------------------
 
@@ -149,23 +149,6 @@ var munge = (function(){
   };
   // End DOM method /displayAsTable/
 
-  // Begin DOM method /displayAsPrint/
-  displayAsPrint = function(text, session, $container){
-    var url = session.getLoc() + 'R/.val/print';
-    $.get(url, function(data){
-      // DOM manipulations
-      var $code = $(configMap.code_template);
-      $code.html(data);
-      var $panel = $(configMap.panel_template);
-      $panel.find('.panel-title').text(text);
-      $panel.find('.panel-body').append($code);
-      $panel.find('.panel-footer').append('<a type="button" class="btn btn-default" href="' +
-       session.getLoc() + 'R/.val/rds">Download (.rds)</a>');
-      $container.empty();
-      $container.append($panel);
-    });
-  };
-  // End DOM method /displayAsPrint/
 
   // Begin DOM method /processMetaFile/
   processMetaFile = function( data, cb ){
@@ -238,7 +221,7 @@ var munge = (function(){
       args,
       function(session){
         stateMap.data_session = session;
-        displayAsPrint('Results',
+        util.displayAsPrint('Results',
           stateMap.data_session,
           jqueryMap.$munge_data_results);
     });
@@ -289,10 +272,18 @@ var munge = (function(){
 
   onDataProcessed = function( session ){
     if( !session ){ return false; }
-    displayAsPrint('Results', session, jqueryMap.$munge_data_results);
+    util.displayAsPrint('Results', session, jqueryMap.$munge_data_results);
     toggleInput( 'metadata', false );
     toggleInput( 'data', false );
-    $.gevent.publish( 'em-munge-data', { session : session } );
+
+    //Make the data available
+    $.gevent.publish(
+      'em-munge-data',
+      {
+        metadata_session : stateMap.metadata_session,
+        data_session     : stateMap.data_session
+      }
+     );
     return true;
   };
   // ---------- END EVENT HANDLERS ---------------------------------------------
@@ -315,8 +306,8 @@ var munge = (function(){
         jqueryMap.$munge_metadata_input ];
 
     $.each( $handles, function( index, value ){
-      value.attr('disabled', !do_enable);
-      value.attr('disabled', !do_enable);
+      value.attr('disabled', !do_enable );
+      value.attr('disabled', !do_enable );
     });
 
     return true;
@@ -339,10 +330,10 @@ var munge = (function(){
     jqueryMap.$munge_data_results.empty();
 
     // must clear out stateMap references
-    stateMap.metadata_session = undefined;
-    stateMap.metadata_file    = undefined;
-    stateMap.data_session     = undefined;
-    stateMap.data_files        = undefined;
+    stateMap.metadata_session = null;
+    stateMap.metadata_file    = null;
+    stateMap.data_session     = null;
+    stateMap.data_files       = null;
 
     // reset input
     toggleInput( 'metadata', true );
@@ -373,17 +364,24 @@ var munge = (function(){
    * @param $container (Object) jQuery parent
    */
   initModule = function( $container ){
+    if( !$container ){
+      console.error( 'Missing container' );
+      return false;
+    }
+
     $container.html( configMap.template );
     setJQueryMap( $container );
 
-    jqueryMap.$munge_metadata_help.text(configMap.default_metadata_help);
-    jqueryMap.$munge_data_help.text(configMap.default_data_help);
+    jqueryMap.$munge_metadata_help.text( configMap.default_metadata_help );
+    jqueryMap.$munge_data_help.text( configMap.default_data_help );
 
     // bind file change HANDLERS
-    jqueryMap.$munge_metadata_input.change(onMetaFileChange);
-    jqueryMap.$munge_data_input.change(onDataFilesChange);
+    jqueryMap.$munge_metadata_input.change( onMetaFileChange );
+    jqueryMap.$munge_data_input.change( onDataFilesChange );
     toggleInput( 'metadata', true );
     toggleInput( 'data', false );
+
+    return true;
   };
   // ---------- END PUBLIC METHODS --------------------------------------------
 

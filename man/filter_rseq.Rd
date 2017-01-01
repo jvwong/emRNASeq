@@ -4,12 +4,16 @@
 \alias{filter_rseq}
 \title{Filter RNA-seq data for minimumnumber of counts in a class}
 \usage{
-filter_rseq(se, comparison)
+filter_rseq(se, baseline, test, min_counts = 1)
 }
 \arguments{
 \item{se}{A \code{\link[SummarizedExperiment]{SummarizedExperiment}}}
 
-\item{comparison}{A two-element array indicating the 'baseline' and 'test' classes IN THAT ORDER. DE testing  will be performed relative to baseline (element 2 vs 1).}
+\item{baseline}{character for the 'baseline' class}
+
+\item{test}{character for the 'test' class. DE testing will be performed relative to}
+
+\item{min_counts}{The minimum threshold in counts per million for each sample}
 }
 \value{
 a filtered \code{\link[edgeR]{DGEList}}

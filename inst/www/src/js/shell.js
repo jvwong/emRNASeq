@@ -1,6 +1,9 @@
 "use strict";
+
+var util = require('./util.js');
 var munge = require('./munge.js');
-// var process_rseq = require('./process_rseq.js');
+var process_rseq = require('./process_rseq.js');
+var ocpu = require('../lib/opencpu.js/opencpu-0.5-npm.js');
 
 //init this script when the page has loaded
 var shell = (function(){
@@ -73,22 +76,26 @@ var shell = (function(){
     }
     $container.html( configMap.template );
     setJQueryMap( $container );
-    
-    // configure and initialize feature modules
-    munge.configModule({});
-    munge.initModule( jqueryMap.$munge_container );
-    jqueryMap.$shell_clear.click( clearInput );
 
+    // configure and initialize feature modules
+    jqueryMap.$shell_clear.click( clearInput );
+    // munge.configModule({});
+    // munge.initModule( jqueryMap.$munge_container );
     // $.gevent.subscribe(
-    //   $container,
+    //   jqueryMap.$process_rseq_container,
     //   'em-munge-data',
     //   function ( event, msg_map ) {
-    //     console.log('message received');
-    //     console.log( msg_map.session );
+    //     localStorage.setItem( 'em-munge-data', util.serialize(msg_map) );
     //     process_rseq.configModule({});
-    //     process_rseq.initModule( jqueryMap.$process_rseq_container );
+    //     process_rseq.initModule( jqueryMap.$process_rseq_container, msg_map  );
     //   }
     // );
+
+    var msg_map = util.deserializeSessionData( localStorage.getItem( 'em-munge-data' ) );
+    process_rseq.configModule({});
+    process_rseq.initModule( jqueryMap.$process_rseq_container, msg_map );
+
+    return true;
   };
   // ---------- END PUBLIC METHODS --------------------------------------------
 
