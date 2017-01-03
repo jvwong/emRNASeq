@@ -29,27 +29,30 @@ var process_rseq = (function(){
               '</div>' +
             '</div>' +
             '<div class="form-group">' +
-            '<div class="col-sm-offset-3 col-sm-9">' +
-              '<button type="submit" class="btn btn-primary btn-block em-process_rseq-class-submit">Submit</button>' +
+              '<div class="col-sm-offset-3 col-sm-9">' +
+                '<button type="submit" class="btn btn-primary btn-block em-process_rseq-class-submit">Submit</button>' +
+              '</div>' +
             '</div>' +
-           '</div>' +
-           '<p><small class="col-sm-offset-3 help-block"></small></p>' +
+            '<p><small class="col-sm-offset-3 help-block"></small></p>' +
           '</fieldset>' +
         '</form>' +
-        '<div class="em-process_rseq-results">' +
-          '<div class="em-process_rseq-results-filter"></div>' +
+        '<div class="em-process_rseq-results row">' +
+          '<div class="alert alert-success em-process_rseq-results-update col-sm-offset-2 col-sm-6"></div>' +
+          '<div class="col-sm-12 em-process_rseq-results-normalize"></div>' +
         '</div>' +
       '</div>',
 
     settable_map : {}
   },
   stateMap = {
-    metadata_session      : null,
-    data_session          : null,
-    filter_rseq_session   : null,
-    classes               : [],
-    test_class            : null,
-    baseline_class        : null
+    metadata_session        : null,
+    data_session            : null,
+    filter_rseq_session     : null,
+    normalize_rseq_session  : null,
+    de_test_rseq_session    : null,
+    classes                 : [],
+    test_class              : null,
+    baseline_class          : null
   },
   jqueryMap = {},
   reset,
@@ -58,6 +61,7 @@ var process_rseq = (function(){
   onSubmitClass,
   processRNASeq,
   onRNASeqProcessed,
+  toggleInput,
   initModule;
   // ---------- END MODULE SCOPE VARIABLES -------------------------------------
 
@@ -74,8 +78,10 @@ var process_rseq = (function(){
       $em_process_rseq_class_test_input     : $container.find('.em-process_rseq .em-process_rseq-class #em-process_rseq-class-test'),
       $em_process_rseq_class_baseline_input : $container.find('.em-process_rseq .em-process_rseq-class #em-process_rseq-class-baseline'),
       $em_process_rseq_class_form           : $container.find('.em-process_rseq .em-process_rseq-class'),
+      $em_process_rseq_class_submit         : $container.find('.em-process_rseq .em-process_rseq-class .em-process_rseq-class-submit'),
       $em_process_rseq_class_help           : $container.find('.em-process_rseq .help-block'),
-      $em_process_rseq_results_filter       : $container.find('.em-process_rseq .em-process_rseq-results .em-process_rseq-results-filter')
+      $em_process_rseq_results_update       : $container.find('.em-process_rseq .em-process_rseq-results .em-process_rseq-results-update'),
+      $em_process_rseq_results_normalize    : $container.find('.em-process_rseq .em-process_rseq-results .em-process_rseq-results-normalize')
     };
   };
   // End DOM method /setJQueryMap/
@@ -83,31 +89,59 @@ var process_rseq = (function(){
   // Begin DOM method /processRNASeq/
   processRNASeq = function( baseline, test, cb ){
 
+    var
+    jqxhr_filter,
+    jqxhr_normalize,
+    jqxhr_test,
+    onfail,
+    onDone;
+
+    onDone = function( text ){
+      jqueryMap.$em_process_rseq_results_update
+        .append('<p>' + text + '</p>')
+        .toggle( true );
+    };
+
+    onfail = function( jqXHR ){
+      var errText = "Server error: " + jqXHR.responseText;
+      console.error(errText);
+      jqueryMap.$em_process_rseq_class_help.text(errText);
+      cb( false );
+    };
+
     // filter
-    //perform the request
-    var jqxhr = ocpu.call('filter_rseq', {
+    jqxhr_filter = ocpu.call('filter_rseq', {
       se          : stateMap.data_session,
       baseline    : baseline,
       test        : test,
       min_counts  : 1
-    }, function(session){
-      stateMap.filter_rseq_session = session;
-    });
+    }, function( session ){ stateMap.filter_rseq_session = session; })
+    .done(function(){ onDone('Filtering complete'); })
+    .fail( onfail );
 
-    jqxhr.done(function(){
-      //clear any previous help messages
-      // jqueryMap.$munge_metadata_help.text( stateMap.metadata_file.name );
-      cb( stateMap.filter_rseq_session );
-    });
+    jqxhr_normalize = jqxhr_filter.then( function( ){
+      return ocpu.call('normalize_rseq', {
+        filtered_dge  : stateMap.filter_rseq_session
+      }, function( session ){ stateMap.normalize_rseq_session = session; });
+    })
+    .done( function(){ onDone('Normalization complete'); } )
+    .fail( onfail );
 
-    jqxhr.fail(function(){
-      var errText = "Server error: " + jqxhr.responseText;
-      console.error(errText);
-      jqueryMap.$em_process_rseq_class_help.text(errText);
-      jqueryMap.$em_process_rseq_results_filter.empty();
-      cb( false );
-    });
-    // normalize
+    jqxhr_test = jqxhr_normalize.then( function( ){
+      return ocpu.call('de_test_rseq', {
+        normalized_dge  : stateMap.normalize_rseq_session,
+        baseline        : baseline,
+        test            : test
+      }, function( session ){ stateMap.de_test_rseq_session = session; });
+    })
+    .done( function(){
+      onDone('Differential expression testing complete');
+      util.displayAsPrint( 'Results',
+        stateMap.de_test_rseq_session,
+        jqueryMap.$em_process_rseq_results_normalize );
+      toggleInput( 'class', false );
+    })
+    .fail( onfail );
     // test
 
     return true;
@@ -137,12 +171,36 @@ var process_rseq = (function(){
 
   onRNASeqProcessed = function( session ){
     if( !session ) { return false; }
-    util.displayAsPrint('Results', session, jqueryMap.$em_process_rseq_results_filter);
+    util.displayAsPrint('Results', session, jqueryMap.$em_process_rseq_results_normalize);
     return true;
   };
   // ---------- END EVENT HANDLERS ---------------------------------------------
 
   // ---------- BEGIN PUBLIC METHODS -------------------------------------------
+  // Begin public method /toggleInput/
+  /* Toggle the input availbility for a matched element
+   *
+   * @param label the stateMap key to set
+   * @param do_enable boolean true if enable, false to disable
+   *
+   * @return boolean
+   */
+  toggleInput = function( label, do_enable ) {
+    var $handles = label === 'class' ?
+      [ jqueryMap.$em_process_rseq_class_test_input,
+        jqueryMap.$em_process_rseq_class_baseline_input,
+        jqueryMap.$em_process_rseq_class_submit ] :
+      [];
+
+    $.each( $handles, function( index, value ){
+      value.attr('disabled', !do_enable );
+      value.attr('disabled', !do_enable );
+    });
+
+    return true;
+  };
+  // End public method /toggleInput/
+
   // Begin public method /reset/
   /* Return to the ground state
    *
@@ -202,6 +260,7 @@ var process_rseq = (function(){
     }
     $container.html( configMap.template );
     setJQueryMap( $container );
+    jqueryMap.$em_process_rseq_results_update.toggle( false );
     stateMap.metadata_session = msg_map.metadata_session;
     stateMap.data_session = msg_map.data_session;
 

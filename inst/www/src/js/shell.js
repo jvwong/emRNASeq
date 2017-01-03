@@ -90,7 +90,6 @@ var shell = (function(){
     //     process_rseq.initModule( jqueryMap.$process_rseq_container, msg_map  );
     //   }
     // );
-
     var msg_map = util.deserializeSessionData( localStorage.getItem( 'em-munge-data' ) );
     process_rseq.configModule({});
     process_rseq.initModule( jqueryMap.$process_rseq_container, msg_map );

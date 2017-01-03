@@ -15,8 +15,13 @@ test_that("filter_rseq requires two classes", {
   expect_is(sample_filtered_dge, "DGEList")
 })
 
+### normalize_rseq
+tmm_normalized_dge <- normalize_rseq(sample_filtered_dge)
+test_that("normalize_rseq returns a DGEList", {
+  expect_is(tmm_normalized_dge, 'DGEList')
+})
+
 ### de_test_rseq
-tmm_normalized_dge <- edgeR::calcNormFactors(sample_filtered_dge, method = "TMM")
 test_that("process_rseq returns a DGEList with correct counts attribute", {
   expect_equal(dim(tmm_normalized_dge)[2], 6)
 })

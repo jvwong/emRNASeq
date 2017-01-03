@@ -41,6 +41,21 @@ filter_rseq <- function(se, baseline, test, min_counts = 1){
   return(filtered_dge)
 }
 
+#' Think wrapper for RNASeq normalization package of choice (edgeR)
+#'
+#' Takes in a \code{\link[edgeR]{DGEList}} containing (filtered) RNA-seq data, performs a normalization using  \code{\link[edgeR]{calcNormFactors}} with default method "TMM"
+#'
+#' @param filtered_dge A \code{\link[edgeR]{DGEList}}, typically the output of \code{\link{filter_rseq}}
+#'
+#' @return the normalized \code{\link[edgeR]{DGEList}} object
+#'
+#' @export
+normalize_rseq <- function(filtered_dge){
+  normalized_dge <- edgeR::calcNormFactors(filtered_dge, method = "TMM")
+  return(normalized_dge)
+}
+
+
 #' Perform a pair-wise differential expression test on RNA-seq data
 #'
 #' Takes in a \code{\link[edgeR]{DGEList}} containing (normalized) RNA-seq data, performs a fit using \code{\link[edgeR]{estimateCommonDisp}} and \code{\link[edgeR]{estimateTagwiseDisp}}, a differential expression test via \code{\link[edgeR]{exactTest}} and multiple-testing correction using Benjamini-Hochberge method in \code{\link[edgeR]{topTags}}.
