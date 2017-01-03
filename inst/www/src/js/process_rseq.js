@@ -36,9 +36,12 @@ var process_rseq = (function(){
             '<p><small class="col-sm-offset-3 help-block"></small></p>' +
           '</fieldset>' +
         '</form>' +
-        '<div class="em-process_rseq-results row">' +
-          '<div class="alert alert-info em-process_rseq-results-update col-sm-offset-3 col-sm-6"></div>' +
-          '<div class="col-sm-12 em-process_rseq-results-normalize"></div>' +
+        '<div class="em-process_rseq-results">' +
+          '<div class="row">' +
+            '<div class="alert alert-info em-process_rseq-results-status status col-sm-offset-4 col-sm-6"></div>' +
+          '</div>' +
+          '<div class="em-process_rseq-results-normalize"></div>' +
+          '<div class="em-process_rseq-results-deplot"></div>' +          
         '</div>' +
       '</div>',
 
@@ -80,8 +83,9 @@ var process_rseq = (function(){
       $em_process_rseq_class_form           : $container.find('.em-process_rseq .em-process_rseq-class'),
       $em_process_rseq_class_submit         : $container.find('.em-process_rseq .em-process_rseq-class .em-process_rseq-class-submit'),
       $em_process_rseq_class_help           : $container.find('.em-process_rseq .help-block'),
-      $em_process_rseq_results_update       : $container.find('.em-process_rseq .em-process_rseq-results .em-process_rseq-results-update'),
-      $em_process_rseq_results_normalize    : $container.find('.em-process_rseq .em-process_rseq-results .em-process_rseq-results-normalize')
+      $em_process_rseq_results_status       : $container.find('.em-process_rseq .em-process_rseq-results .em-process_rseq-results-status'),
+      $em_process_rseq_results_normalize    : $container.find('.em-process_rseq .em-process_rseq-results .em-process_rseq-results-normalize'),
+      $em_process_rseq_results_deplot       : $container.find('.em-process_rseq .em-process_rseq-results .em-process_rseq-results-deplot')
     };
   };
   // End DOM method /setJQueryMap/
@@ -97,7 +101,7 @@ var process_rseq = (function(){
     onDone;
 
     onDone = function( text ){
-      jqueryMap.$em_process_rseq_results_update
+      jqueryMap.$em_process_rseq_results_status
         .append('<p>' + text + '</p>')
         .toggle( true );
     };
@@ -106,7 +110,7 @@ var process_rseq = (function(){
       var errText = "Server error: " + jqXHR.responseText;
       console.error(errText);
       jqueryMap.$em_process_rseq_class_help.text(errText);
-      cb( false );
+      cb( true );
     };
 
     // filter
@@ -136,10 +140,10 @@ var process_rseq = (function(){
     })
     .done( function(){
       onDone('Differential expression testing complete');
-      util.displayAsPrint( 'Results',
-        stateMap.de_test_rseq_session,
-        jqueryMap.$em_process_rseq_results_normalize );
-      toggleInput( 'class', false );
+      cb( null,
+        stateMap.filter_rseq_session,
+        stateMap.normalize_rseq_session,
+        stateMap.de_test_rseq_session );
     })
     .fail( onfail );
     // test
@@ -166,12 +170,31 @@ var process_rseq = (function(){
         return false;
       }
 
-      return processRNASeq( proposed_baseline_class, proposed_test_class, onRNASeqProcessed );
+      return processRNASeq( proposed_baseline_class,
+        proposed_test_class,
+        onRNASeqProcessed );
   };
 
-  onRNASeqProcessed = function( session ){
-    if( !session ) { return false; }
-    util.displayAsPrint('Results', session, jqueryMap.$em_process_rseq_results_normalize);
+  onRNASeqProcessed = function( err,
+    filter_rseq_session,
+    normalize_rseq_session,
+    de_test_rseq_session ){
+
+    if( err ) { return false; }
+
+    util.displayAsPrint( 'Results',
+      de_test_rseq_session,
+      jqueryMap.$em_process_rseq_results_normalize );
+    toggleInput( 'class', false );
+
+    jqueryMap.$em_process_rseq_results_deplot.rplot("plot_de", {
+      filtered_dge  : filter_rseq_session,
+      de_tested_tt  : de_test_rseq_session,
+      baseline      : stateMap.baseline_class,
+      test          : stateMap.test_class,
+      threshold     : 0.05
+    }, function( session ){ console.log(session); });
+
     return true;
   };
   // ---------- END EVENT HANDLERS ---------------------------------------------
@@ -260,7 +283,7 @@ var process_rseq = (function(){
     }
     $container.html( configMap.template );
     setJQueryMap( $container );
-    jqueryMap.$em_process_rseq_results_update.toggle( false );
+    jqueryMap.$em_process_rseq_results_status.toggle( false );
     stateMap.metadata_session = msg_map.metadata_session;
     stateMap.data_session = msg_map.data_session;
 

@@ -86,9 +86,22 @@ p {
   }
 }
 
+.status {
+  position: absolute;
+  bottom: 0;
+}
+
 /* panel styling */
 .fixed-panel {
-  min-height: 25em;
+  // min-height: 25em;
   max-height: 25em;
   overflow-y: scroll;
+}
+
+/* plot styling */
+.rplot {
+  position: relative;
+  // width: 600px;
+  height: 350px;
+  // border: solid gray 1px;
 }

@@ -172,7 +172,7 @@ var munge = (function(){
     jqxhr.done(function(){
       //clear any previous help messages
       jqueryMap.$munge_metadata_help.text( stateMap.metadata_file.name );
-      cb( stateMap.metadata_session );
+      cb( null, stateMap.metadata_session );
     });
 
     jqxhr.fail(function(){
@@ -180,7 +180,7 @@ var munge = (function(){
       console.error(errText);
       jqueryMap.$munge_metadata_help.text(errText);
       jqueryMap.$munge_metadata_results.empty();
-      cb( false );
+      cb( true );
     });
 
     return true;
@@ -228,7 +228,7 @@ var munge = (function(){
 
     jqxhr.done(function(){
       jqueryMap.$munge_data_help.text('Files merged: ' + stateMap.data_files.length);
-      cb( stateMap.data_session );
+      cb( null, stateMap.data_session );
     });
 
     jqxhr.fail(function(){
@@ -236,7 +236,7 @@ var munge = (function(){
       console.error(errText);
       jqueryMap.$munge_data_help.text(errText);
       jqueryMap.$munge_data_results.empty();
-      cb( false );
+      cb( true );
     });
 
     return true;
@@ -254,8 +254,8 @@ var munge = (function(){
     return processMetaFile( data, onMetadataProcessed );
   };
 
-  onMetadataProcessed = function( session ){
-    if( !session ) { return false; }
+  onMetadataProcessed = function( err, session ){
+    if( err ) { return false; }
     displayAsTable('Results', session, jqueryMap.$munge_metadata_results);
     toggleInput( 'data', true );
     return true;
@@ -270,8 +270,8 @@ var munge = (function(){
     return processDataFiles( data, onDataProcessed );
   };
 
-  onDataProcessed = function( session ){
-    if( !session ){ return false; }
+  onDataProcessed = function( err, session ){
+    if( err ){ return false; }
     util.displayAsPrint('Results', session, jqueryMap.$munge_data_results);
     toggleInput( 'metadata', false );
     toggleInput( 'data', false );
