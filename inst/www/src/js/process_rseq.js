@@ -37,7 +37,7 @@ var process_rseq = (function(){
           '</fieldset>' +
         '</form>' +
         '<div class="em-process_rseq-results row">' +
-          '<div class="alert alert-success em-process_rseq-results-update col-sm-offset-2 col-sm-6"></div>' +
+          '<div class="alert alert-info em-process_rseq-results-update col-sm-offset-3 col-sm-6"></div>' +
           '<div class="col-sm-12 em-process_rseq-results-normalize"></div>' +
         '</div>' +
       '</div>',

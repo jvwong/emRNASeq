@@ -85,6 +85,24 @@ de_test_rseq <- function(normalized_dge, baseline, test){
   return(bh_de_tested_tt)
 }
 
+#' An M vs. A plot that highlights differentially expressed genes
+#'
+#' Takes in an \code{\link[edgeR]{topTags}} and  \code{\link[edgeR]{DGEList}} objects and the classes that are being compared and uses the \code{\link[edgeR]{plotSmear}} to display the differentially expressed genes.
+#'
+#' @param de_tested_tt A \code{\link[edgeR]{topTags}}, typically the output of \code{\link{de_test_rseq}}
+#' @param filtered_dge A \code{\link[edgeR]{DGEList}}, typically the output of \code{\link{filter_rseq}}
+#' @param baseline character array for the 'baseline' class
+#' @param test character array for the 'test' class.
+#' @param threshold the maximum value of FDR (q-value) for a gene to be considered differentially expressed
+#'
+#' @export
+plot_de <- function(de_tested_tt, filtered_dge, baseline, test, threshold = 0.05){
+  rn = rownames(de_tested_tt$table)
+  deg =rn[de_tested_tt$table$FDR<threshold]
+  plotSmear(filtered_dge, pair=c(baseline, test), de.tags=deg)
+}
+
+
 #' Generate text file content for genes ranked by a funtion of p-value for differential expression
 #'
 #' Creates content conforming to \href{http://software.broadinstitute.org/cancer/software/gsea/wiki/index.php/Data_formats#RNK:_Ranked_list_file_format_.28.2A.rnk.29}{GSEA's text file format for a ranked list file (.rnk)}. The column header names are arbitrary. The gene rank is based on: \eqn{sign(log(fold_change) * -log( pvalue )}.
