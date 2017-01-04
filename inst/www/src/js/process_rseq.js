@@ -38,7 +38,19 @@ var process_rseq = (function(){
         '</form>' +
         '<div class="em-process_rseq-results">' +
           '<div class="row">' +
-            '<div class="alert alert-info em-process_rseq-results-status status col-sm-offset-4 col-sm-6"></div>' +
+            '<div class="col-sm-offset-3 col-sm-9">' +
+              '<div class="progress em-process_rseq-results-progress">' +
+                '<div class="progress-bar progress-bar-danger" style="width: 50%;">' +
+                  '<span>Filtering</span>' +
+                '</div>' +
+                '<div class="progress-bar progress-bar-info" style="width: 25%;">' +
+                  '<span>Normalizing</span>' +
+                '</div>' +
+                '<div class="progress-bar progress-bar-success" style="width: 25%;">' +
+                  '<span>Testing</span>' +
+                '</div>' +
+              '</div>' +
+            '</div>' +
           '</div>' +
           '<div class="em-process_rseq-results-normalize"></div>' +
           '<div class="em-process_rseq-results-deplot rplot"></div>' +
@@ -65,7 +77,7 @@ var process_rseq = (function(){
   processRNASeq,
   onRNASeqProcessed,
   toggleInput,
-  plotR,
+  graphicR,
   initModule;
   // ---------- END MODULE SCOPE VARIABLES -------------------------------------
 
@@ -78,15 +90,15 @@ var process_rseq = (function(){
   // Begin DOM method /setJQueryMap/
   setJQueryMap = function( $container ){
     jqueryMap = {
-      $container                            : $container,
-      $em_process_rseq_class_test_input     : $container.find('.em-process_rseq .em-process_rseq-class #em-process_rseq-class-test'),
-      $em_process_rseq_class_baseline_input : $container.find('.em-process_rseq .em-process_rseq-class #em-process_rseq-class-baseline'),
-      $em_process_rseq_class_form           : $container.find('.em-process_rseq .em-process_rseq-class'),
-      $em_process_rseq_class_submit         : $container.find('.em-process_rseq .em-process_rseq-class .em-process_rseq-class-submit'),
-      $em_process_rseq_class_help           : $container.find('.em-process_rseq .help-block'),
-      $em_process_rseq_results_status       : $container.find('.em-process_rseq .em-process_rseq-results .em-process_rseq-results-status'),
-      $em_process_rseq_results_normalize    : $container.find('.em-process_rseq .em-process_rseq-results .em-process_rseq-results-normalize'),
-      $em_process_rseq_results_deplot       : $container.find('.em-process_rseq .em-process_rseq-results .em-process_rseq-results-deplot')
+      $container                                : $container,
+      $em_process_rseq_class_test_input         : $container.find('.em-process_rseq .em-process_rseq-class #em-process_rseq-class-test'),
+      $em_process_rseq_class_baseline_input     : $container.find('.em-process_rseq .em-process_rseq-class #em-process_rseq-class-baseline'),
+      $em_process_rseq_class_form               : $container.find('.em-process_rseq .em-process_rseq-class'),
+      $em_process_rseq_class_submit             : $container.find('.em-process_rseq .em-process_rseq-class .em-process_rseq-class-submit'),
+      $em_process_rseq_class_help               : $container.find('.em-process_rseq .help-block'),
+      $em_process_rseq_results_normalize        : $container.find('.em-process_rseq .em-process_rseq-results .em-process_rseq-results-normalize'),
+      $em_process_rseq_results_deplot           : $container.find('.em-process_rseq .em-process_rseq-results .em-process_rseq-results-deplot'),
+      $em_process_rseq_results_progress         : $container.find('.em-process_rseq .em-process_rseq-results .em-process_rseq-results-progress')
     };
   };
   // End DOM method /setJQueryMap/
@@ -101,10 +113,9 @@ var process_rseq = (function(){
     onfail,
     onDone;
 
-    onDone = function( text ){
-      jqueryMap.$em_process_rseq_results_status
-        .append('<p>' + text + '</p>')
-        .toggle( true );
+    onDone = function( n ){
+      var $bar = jqueryMap.$em_process_rseq_results_progress.find( '.progress-bar:nth-child(' + n + ')' );
+        $bar.toggle( true );
     };
 
     onfail = function( jqXHR ){
@@ -121,7 +132,7 @@ var process_rseq = (function(){
       test        : test,
       min_counts  : 1
     }, function( session ){ stateMap.filter_rseq_session = session; })
-    .done(function(){ onDone('Filtering complete'); })
+    .done(function(){ onDone( 1 ); })
     .fail( onfail );
 
     jqxhr_normalize = jqxhr_filter.then( function( ){
@@ -129,7 +140,7 @@ var process_rseq = (function(){
         filtered_dge  : stateMap.filter_rseq_session
       }, function( session ){ stateMap.normalize_rseq_session = session; });
     })
-    .done( function(){ onDone('Normalization complete'); } )
+    .done( function(){ onDone( 2 ); } )
     .fail( onfail );
 
     jqxhr_test = jqxhr_normalize.then( function( ){
@@ -140,7 +151,7 @@ var process_rseq = (function(){
       }, function( session ){ stateMap.de_test_rseq_session = session; });
     })
     .done( function(){
-      onDone('Differential expression testing complete');
+      onDone( 3 );
       toggleInput( 'class', false );
       cb( null, stateMap.de_test_rseq_session );
     })
@@ -169,6 +180,9 @@ var process_rseq = (function(){
         return false;
       }
 
+      jqueryMap.$em_process_rseq_results_progress
+        .toggle( true );
+
       return processRNASeq( proposed_baseline_class,
         proposed_test_class,
         onRNASeqProcessed );
@@ -181,7 +195,7 @@ var process_rseq = (function(){
 
     var name, args;
 
-    util.displayAsPrint( 'Results',
+    util.displayAsPrint( 'DE Testing Results',
       de_test_rseq_session,
       jqueryMap.$em_process_rseq_results_normalize );
 
@@ -193,7 +207,7 @@ var process_rseq = (function(){
         test          : stateMap.test_class,
         threshold     : 0.05
       };
-    util.plotR( 'DE Genes',
+    util.graphicR( 'DE Genes',
       name,
       args,
       jqueryMap.$em_process_rseq_results_deplot,
@@ -286,8 +300,11 @@ var process_rseq = (function(){
       return false;
     }
     $container.html( configMap.template );
+
     setJQueryMap( $container );
-    jqueryMap.$em_process_rseq_results_status.toggle( false );
+    jqueryMap.$em_process_rseq_results_progress.find( '.progress-bar' ).toggle( false );
+    jqueryMap.$em_process_rseq_results_progress.toggle( false );
+
     stateMap.metadata_session = msg_map.metadata_session;
     stateMap.data_session = msg_map.data_session;
 

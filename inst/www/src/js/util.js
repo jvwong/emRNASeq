@@ -8,7 +8,7 @@ module.exports = (function(){
    serialize,
    deserializeSessionData,
    displayAsPrint,
-   plotR,
+   graphicR,
    unique;
 
   /* Begin Public method /serialize/
@@ -157,8 +157,8 @@ module.exports = (function(){
   };
   // End Public method /unique/
 
-  /* Begin Public method /plotR/
-   * A convenience wrapper for formatting a plot routine
+  /* Begin Public method /graphicR/
+   * A convenience wrapper for formatting a graphic
    *
    * @param title string for the panel
    * @param func string the function to call
@@ -168,7 +168,7 @@ module.exports = (function(){
    *
    * @return an array of unique elements
    */
-  plotR = function( title, func, args, $container, cb ){
+  graphicR = function( title, func, args, $container, cb ){
 
     var
     jqxhr,
@@ -189,13 +189,27 @@ module.exports = (function(){
     // filter
     jqxhr = ocpu.call(func, args, function( session ){
       var $panel = $('<div class="panel panel-success">' +
-                       '<div class="panel-heading">' +
-                         '<h3 class="panel-title">' + title + '</h3>' +
-                       '</div>' +
-                       '<div class="panel-body">' +
-                        '<img src="" class="img-responsive" alt="Responsive image">' +
-                       '</div>' +
-                     '</div>');
+                    '<div class="panel-heading">' +
+                       '<h3 class="panel-title">' + title + '</h3>' +
+                    '</div>' +
+                    '<div class="panel-body">' +
+                      '<img src="" class="img-responsive" alt="Responsive image">' +
+                    '</div>' +
+                    '<div class="panel-footer">' +
+                      '<div class="btn-group dropup">' +
+                        '<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">'  +
+                          'Downloads <span class="caret"></span>' +
+                        '</button>' +
+                        '<ul class="dropdown-menu">' +
+                          '<li><a href="' + session.getLoc() + 'graphics/1/png' + '" download>PNG</a></li>' +
+                          '<li><a href="' + session.getLoc() + 'graphics/1/svg' + '" download>SVG</a></li>' +
+                          '<li><a href="' + session.getLoc() + 'graphics/1/pdf' + '" download>PDF</a></li>' +
+                          '<li role="separator" class="divider"></li>' +
+                          '<li><a href="' + session.getLoc() + 'R/.val/rds" download>RDS</a></li>' +
+                        '</ul>' +
+                      '</div>' +
+                    '</div>' +
+                   '</div>');
       var $img = $panel.find('.img-responsive');
           $img.attr('src', session.getLoc() + 'graphics/1/png' );
       $container.append($panel);
@@ -212,6 +226,6 @@ module.exports = (function(){
     deserializeSessionData  : deserializeSessionData,
     displayAsPrint          : displayAsPrint,
     unique                  : unique,
-    plotR                   : plotR
+    graphicR                : graphicR
   };
 }());

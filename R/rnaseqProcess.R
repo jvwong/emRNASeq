@@ -100,6 +100,10 @@ plot_de <- function(filtered_dge, de_tested_tt, baseline, test, threshold = 0.05
   rn = rownames(de_tested_tt$table)
   deg =rn[de_tested_tt$table$FDR<threshold]
   plotSmear(filtered_dge, pair=c(baseline, test), de.tags=deg)
+  legend("topright",
+    legend = c(paste("FDR < ", threshold)),
+    col = c("red"),
+    pch = c(1))
   #return nothing
   invisible()
 }
