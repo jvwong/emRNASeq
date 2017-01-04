@@ -11,7 +11,10 @@ var munge = (function(){
 
     template : String() +
       '<div class="em-munge">' +
-        '<h2>Data Munge <small>Upload RNA sequencing (meta)data</small></h2>' +
+        '<div class="row">' +
+          '<h2 class="col-xs-12 col-sm-10 em-section-title">Data Munge <small></small></h2>' +
+          '<h4 class="col-xs-12 col-sm-2"><a class="btn btn-danger btn-block em-munge-clear clear-btn ajax-sensitive col-xs-3 col-md-3">Reset</a></h4>' +
+        '</div>' +
         '<hr/>' +
         '<form>' +
           '<fieldset class="form-group">' +
@@ -52,25 +55,8 @@ var munge = (function(){
     default_metadata_help : String() + 'Tab-delimited (.txt). Headers for \'id\' (filenames) and \'class\'',
     default_data_help     : String() + 'Tab-delimited (.txt). Rows indicate gene and count',
 
-    table_template : String() +
-     '<table class="table table-striped table-bordered em-table">' +
-       '<thead>' +
-         '<tr></tr>' +
-       '</thead>' +
-     '</table>',
-
      code_template : String() +
       '<pre class="em-code"></pre>',
-
-     panel_template : String() +
-       '<div class="panel panel-success">' +
-          '<div class="panel-heading">' +
-            '<h3 class="panel-title"></h3>' +
-          '</div>' +
-          '<div class="panel-body"></div>' +
-          '<div class="panel-footer"></div>' +
-        '</div>',
-
     settable_map : {}
   },
 
@@ -91,7 +77,6 @@ var munge = (function(){
   onDataFilesChange,
   onDataProcessed,
   processDataFiles,
-  displayAsTable,
   initModule;
   // ---------- END MODULE SCOPE VARIABLES -------------------------------------
 
@@ -102,6 +87,7 @@ var munge = (function(){
     jqueryMap = {
       $container                : $container,
       $munge                    : $container.find('.em-munge'),
+      $munge_clear              : $container.find('.em-munge .em-munge-clear'),
       $munge_metadata_input     : $container.find('.em-munge .em-munge-meta input'),
       $munge_metadata_label     : $container.find('.em-munge .em-munge-meta label'),
       $munge_metadata_help      : $container.find('.em-munge .em-munge-meta .help-block'),
@@ -114,41 +100,6 @@ var munge = (function(){
     };
   };
   // End DOM method /setJQueryMap/
-
-  // Begin DOM method /displayAsTable/
-  displayAsTable = function(text, session, $container){
-    session.getObject(function(data){
-      if(!data.length){ return; }
-
-      // Data manipulations
-      var keys = Object.keys(data[0]);
-      var headers = keys.map(function(v){
-        return '<th>' + v + '</th>';
-      });
-      var aoColumns = keys.map(function(v){
-        return {
-           "mDataProp": v
-        };
-      });
-
-      // DOM manipulations
-      var $table = $(configMap.table_template);
-      if(headers.length){
-        $table.find('thead tr').html($(headers.join('')));
-      }
-      var $panel = $(configMap.panel_template);
-      $panel.find('.panel-title').text(text);
-      $panel.find('.panel-body').append($table);
-      $container.empty();
-      $container.append($panel);
-      $table.DataTable({
-            "aaData": data,
-            "aoColumns": aoColumns
-          });
-    });
-  };
-  // End DOM method /displayAsTable/
-
 
   // Begin DOM method /processMetaFile/
   processMetaFile = function( data, cb ){
@@ -163,10 +114,7 @@ var munge = (function(){
     var jqxhr = ocpu.call('create_meta', {
       metadata_file : stateMap.metadata_file
     }, function(session){
-      stateMap.metadata_session = session;
-      displayAsTable('Results',
-        stateMap.metadata_session,
-        jqueryMap.$munge_metadata_results);
+      stateMap.metadata_session = session;    
     });
 
     jqxhr.done(function(){
@@ -256,8 +204,13 @@ var munge = (function(){
 
   onMetadataProcessed = function( err, session ){
     if( err ) { return false; }
-    displayAsTable('Results', session, jqueryMap.$munge_metadata_results);
-    toggleInput( 'data', true );
+    util.displayAsTable('Results',
+      session,
+      jqueryMap.$munge_metadata_results,
+      function( err ){
+        if( err ) { return false; }
+        toggleInput( 'data', true );
+      });
     return true;
   };
 
@@ -272,18 +225,23 @@ var munge = (function(){
 
   onDataProcessed = function( err, session ){
     if( err ){ return false; }
-    util.displayAsPrint('Results', session, jqueryMap.$munge_data_results);
-    toggleInput( 'metadata', false );
-    toggleInput( 'data', false );
+    util.displayAsPrint('Results',
+     session,
+     jqueryMap.$munge_data_results,
+     function( err ) {
+        if ( err ) { return false; }
+        toggleInput( 'metadata', false );
+        toggleInput( 'data', false );
 
-    //Make the data available
-    $.gevent.publish(
-      'em-munge-data',
-      {
-        metadata_session : stateMap.metadata_session,
-        data_session     : stateMap.data_session
-      }
-     );
+        //Make the data available
+        $.gevent.publish(
+          'em-munge-data',
+          {
+            metadata_session : stateMap.metadata_session,
+            data_session     : stateMap.data_session
+          }
+         );
+     });
     return true;
   };
   // ---------- END EVENT HANDLERS ---------------------------------------------
@@ -380,6 +338,8 @@ var munge = (function(){
     jqueryMap.$munge_data_input.change( onDataFilesChange );
     toggleInput( 'metadata', true );
     toggleInput( 'data', false );
+
+    jqueryMap.$munge_clear.click( reset );
 
     return true;
   };

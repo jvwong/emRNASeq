@@ -130,7 +130,7 @@ format_ranks_gsea <- function(de_tested_tt){
     stringsAsFactors = FALSE)
   ordered_ranks_df <- ranks_df[order(ranks_df[,2], decreasing = TRUE), ]
 
-  return(ordered_ranks_df)
+  return(as.data.frame(ordered_ranks_df))
 }
 
 #' Generate an expression text file content

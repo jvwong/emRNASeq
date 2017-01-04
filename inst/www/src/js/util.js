@@ -8,6 +8,7 @@ module.exports = (function(){
    serialize,
    deserializeSessionData,
    displayAsPrint,
+   displayAsTable,
    graphicR,
    unique;
 
@@ -106,7 +107,6 @@ module.exports = (function(){
   };
   // End Public method /setConfigMap/
 
-  // Begin DOM method /displayAsPrint/
   /* Begin Public method /displayAsPrint/
    * A convenience wrapper to display the R object text description in a
    * Bootstrap panel. Also provides link to download object as .rds file.
@@ -114,9 +114,11 @@ module.exports = (function(){
    * @param text some descriptive text for the header
    * @param session The ocpu Session
    * @param $container jQuery object to place panel inside with text
+   * @param next the optional callback
    */
-  displayAsPrint = function(text, session, $container){
+  displayAsPrint = function(text, session, $container, next ){
     var url = session.getLoc() + 'R/.val/print';
+    var cb = next || function(){};
 
     $.get(url, function(data){
       // DOM manipulations
@@ -135,9 +137,85 @@ module.exports = (function(){
        session.getLoc() + 'R/.val/rds">Download (.rds)</a>');
       $container.empty();
       $container.append($panel);
-    });
+    })
+    .done( function(){ cb( null ); } )
+    .fail( function(){ cb( true ); } );
   };
   // End DOM method /displayAsPrint/
+
+  /* Begin Public method /displayAsTable/
+   * A convenience wrapper to display the R object text description as a
+   * table inside a Boostrap panel.
+   * Also provides link to download object as .rds file.
+   *
+   * @param text some descriptive text for the header
+   * @param session The ocpu Session
+   * @param $container jQuery object to place panel inside with text
+   * @param next the optional callback
+   */
+
+  displayAsTable = function( text, session, $container, next ){
+    var cb = next || function(){};
+    session.getObject(function(data){
+      if(!data.length){ return; }
+
+      // Data manipulations
+      var keys = Object.keys(data[0]);
+      var headers = keys.map(function(v){
+        return '<th>' + v + '</th>';
+      });
+      var aoColumns = keys.map(function(v){
+        return {
+           "mDataProp": v
+        };
+      });
+
+      // DOM manipulations
+      var $table = $('<div class="table-responsive">' +
+                      '<table class="table table-condensed table-striped table-bordered em-table">' +
+                        '<thead>' +
+                          '<tr></tr>' +
+                        '</thead>' +
+                      '</table>' +
+                     '</div>');
+      if(headers.length){
+        $table.find('thead tr').html($(headers.join('')));
+      }
+      var $panel = $( '<div class="panel panel-success">' +
+                        '<div class="panel-heading">' +
+                          '<h3 class="panel-title"></h3>' +
+                        '</div>' +
+                        '<div class="panel-body"></div>' +
+                        '<div class="panel-footer">' +
+                          '<div class="btn-group dropup">' +
+                            '<button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">'  +
+                              'Downloads <span class="caret"></span>' +
+                            '</button>' +
+                            '<ul class="dropdown-menu">' +
+                              '<li><a href="' + session.getLoc() + 'R/.val/json' + '" download>JSON</a></li>' +
+                              '<li><a href="' + session.getLoc() + 'R/.val/csv' + '" download>CSV</a></li>' +
+                              '<li><a href="' + session.getLoc() + 'R/.val/tab' + '" download>TAB</a></li>' +
+                              '<li><a href="' + session.getLoc() + 'R/.val/md' + '" download>MD</a></li>' +
+                              '<li role="separator" class="divider"></li>' +
+                              '<li><a href="' + session.getLoc() + 'R/.val/rds" download>RDS</a></li>' +
+                            '</ul>' +
+                          '</div>' +
+                        '</div>' +
+                      '</div>');
+      $panel.find('.panel-title').text(text);
+      $panel.find('.panel-body').append($table);
+      $panel.find('.panel-footer').append('');
+      $container.empty();
+      $container.append($panel);
+      $table.find('table').DataTable({
+            "aaData": data,
+            "aoColumns": aoColumns
+          });
+    })
+    .done( function(){ cb( null );} )
+    .fail( function(){ cb( true );} );
+  };
+  // End Public method /displayAsTable/
 
   /* Begin Public method /unique/
    * A convenience wrapper to reduce an array to unique elements
@@ -164,17 +242,17 @@ module.exports = (function(){
    * @param func string the function to call
    * @param args object of function parameters
    * @param $container the jquery object to insert the image
-   * @param cb the optional callback
+   * @param next the optional callback
    *
    * @return an array of unique elements
    */
-  graphicR = function( title, func, args, $container, cb ){
+  graphicR = function( title, func, args, $container, next ){
 
     var
     jqxhr,
     onfail,
     onDone,
-    cb = cb instanceof Function ? cb : function(){};
+    cb = next || function(){};
 
     onDone = function( ){
       cb ( null );
@@ -225,6 +303,7 @@ module.exports = (function(){
     serialize               : serialize,
     deserializeSessionData  : deserializeSessionData,
     displayAsPrint          : displayAsPrint,
+    displayAsTable          : displayAsTable,
     unique                  : unique,
     graphicR                : graphicR
   };

@@ -71,7 +71,7 @@ p {
 
 
 #ajax-spinner{
-  position: absolute;
+  position: fixed;
   z-index: 2;
   top: 25%;
   left: 50%;
@@ -79,29 +79,11 @@ p {
 
 /* Shell styling */
 .em-shell {
-  .em-shell-clear {
-    position: relative;
-    top: 3rem;
-    // right: 20%;
-  }
-}
-
-.status {
-  // position: absolute;
-  // bottom: 0;
+  margin-bottom: 10em;
 }
 
 /* panel styling */
 .fixed-panel {
-  // min-height: 25em;
   max-height: 25em;
   overflow-y: scroll;
-}
-
-/* plot styling */
-.rplot {
-  // position: relative;
-  // width: 600px;
-  // height: 350px;
-  // border: solid gray 1px;
 }
