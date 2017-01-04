@@ -10,6 +10,7 @@ module.exports = (function(){
    displayAsPrint,
    displayAsTable,
    graphicR,
+   makeTextFile,
    unique;
 
   /* Begin Public method /serialize/
@@ -235,6 +236,29 @@ module.exports = (function(){
   };
   // End Public method /unique/
 
+  /* Begin Public method /makeTextFile/
+   * Create a text file on the client that can be used to download
+   *
+   * @example <a href=makeTextFile('sometext') download="file.txt">downloadme!</a>
+   * @param text string to convert to file
+   *
+   * @return URL for the file
+   */
+  makeTextFile = function(text) {
+    var data = new Blob([text], {type: 'text/plain'});
+
+    // If we are replacing a previously generated file we need to
+    // manually revoke the object URL to avoid memory leaks.
+    if (textFile !== null) {
+      window.URL.revokeObjectURL(textFile);
+    }
+
+    var textFile = window.URL.createObjectURL(data);
+
+    // returns a URL you can use as a href
+    return textFile;
+  };
+
   /* Begin Public method /graphicR/
    * A convenience wrapper for formatting a graphic
    *
@@ -305,6 +329,7 @@ module.exports = (function(){
     displayAsPrint          : displayAsPrint,
     displayAsTable          : displayAsTable,
     unique                  : unique,
-    graphicR                : graphicR
+    graphicR                : graphicR,
+    makeTextFile            : makeTextFile
   };
 }());

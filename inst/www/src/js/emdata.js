@@ -16,27 +16,25 @@ var modulename = (function(){
           '<h4 class="col-xs-12 col-sm-2"><a class="btn btn-danger btn-block em-emdata-clear clear-btn ajax-sensitive col-xs-3 col-md-3">Reset</a></h4>' +
         '</div>' +
         '<hr/>' +
-        '<p><small class="col-sm-offset-2 help-block"></small></p>' +
         '<div class="em-emdata-results">' +
-          '<div class="row em-emdata-results-progress">' +
-            '<div class="col-sm-12">' +
-              '<div class="progress">' +
-                '<div class="progress-bar progress-bar-danger" style="width: 34%;">' +
-                  '<span>Ranks</span>' +
-                '</div>' +
-                '<div class="progress-bar progress-bar-primary" style="width: 33%;">' +
-                  '<span>Expression</span>' +
-                '</div>' +
-                '<div class="progress-bar progress-bar-success" style="width: 33%;">' +
-                  '<span>Phenotypes</span>' +
-                '</div>' +
-              '</div>' +
+          '<fieldset class="form-group">' +
+            '<legend>GSEA Inputs</legend>' +
+            '<div class="em-emdata-results-files-gsea"></div>' +
+            '<p><small class="col-sm-offset-2 gsea-help-block"></small></p>' +
+          '</fieldset>' +
+          '<fieldset class="form-group">' +
+            '<legend>EM Inputs</legend>' +
+            '<div class="em-emdata-results-files-em">' +
+              '<div class="em-emdata-results-files-em-expression"></div>' +
+              '<div class="em-emdata-results-files-em-phenotype"></div>' +
             '</div>' +
-          '</div>' +
-          '<div class="em-emdata-results-files-gsea"></div>' +
-          '<div class="em-emdata-results-files-em"></div>' +
+            '<p><small class="col-sm-offset-2 em-help-block"></small></p>' +
+          '</fieldset>' +
         '</div>' +
       '</div>',
+
+    code_template : String() +
+      '<pre class="em-code"></pre>',
 
     settable_map : {}
   },
@@ -46,7 +44,9 @@ var modulename = (function(){
     de_test_rseq_session    : null,
     rank_gsea_session       : null,
     expression_em_session   : null,
-    pheontype               : null
+    pheontype               : null,
+    expression_gsea_session : null,
+    phenotype_gsea_session  : null
   },
   jqueryMap = {},
   reset,
@@ -67,50 +67,125 @@ var modulename = (function(){
     jqueryMap = {
       $container                                : $container,
       $emdata_clear                             : $container.find('.em-emdata .em-emdata-clear'),
-      $emdata_help                              : $container.find('.em-emdata .help-block'),
       $emdata_results                           : $container.find('.em-emdata .em-emdata-results'),
-      $emdata_results_progress                  : $container.find('.em-emdata .em-emdata-results .em-emdata-results-progress'),
       $emdata_results_files_gsea                : $container.find('.em-emdata .em-emdata-results .em-emdata-results-files-gsea'),
-      $emdata_results_files_em                  : $container.find('.em-emdata .em-emdata-results .em-emdata-results-files-em')
+      $emdata_gsea_help                         : $container.find('.em-emdata .em-emdata-results .gsea-help-block'),
+      $emdata_results_files_em                  : $container.find('.em-emdata .em-emdata-results .em-emdata-results-files-em'),
+      $emdata_results_files_em_expression       : $container.find('.em-emdata .em-emdata-results .em-emdata-results-files-em .em-emdata-results-files-em-expression '),
+      $emdata_results_files_em_phenotype        : $container.find('.em-emdata .em-emdata-results .em-emdata-results-files-em .em-emdata-results-files-em-phenotype'),
+      $emdata_em_help                           : $container.find('.em-emdata .em-emdata-results .em-help-block')
     };
   };
   // End DOM method /setJQueryMap/
 
-  /* Fetch and append the various files required for GSEA
+  /* Fetch and append the various files required for EM
    *
    * @param $container object the jquery object to append to
+   * @param next function an optional callback
    *
    * @return boolean
    */
-  fetchGSEAFiles = function( $container, cb ){
+  fetchEMFiles = function( $container, next ){
     var
-    jqxhr_rank,
+    jqxhr_expression,
+    jqxhr_phenotype,
     onfail,
-    onDone;
+    onDone,
+    cb = next || function(){};
 
-    onDone = function( n ){
-      var $bar = jqueryMap.$emdata_results_progress.find( '.progress-bar:nth-child(' + n + ')' );
-        $bar.toggle( true );
+    onDone = function( ){
+      jqueryMap.$emdata_em_help.text('');
     };
 
     onfail = function( jqXHR ){
       var errText = "Server error: " + jqXHR.responseText;
       console.error(errText);
-      jqueryMap.$emdata_help.text(errText);
+      jqueryMap.$emdata_em_help.text(errText);
       cb( true );
     };
 
     // filter
-    jqxhr_rank = ocpu.call('format_ranks_gsea', {
-      de_tested_tt : stateMap.de_test_rseq_session
-    }, function( session ){ stateMap.rank_gsea_session = session; })
-    .done(function(){
-      onDone( 1 );
-      util.displayAsTable('Rank Files (.rnk)',
+    jqxhr_expression = ocpu.call('format_expression_gsea', {
+      normalized_dge : stateMap.normalize_rseq_session
+    }, function( session ){ stateMap.expression_gsea_session = session; })
+    .done( function(){
+      util.displayAsTable('Expression file (.txt)',
+        stateMap.expression_gsea_session,
+        jqueryMap.$emdata_results_files_em_expression,
+        null );
+    })
+    .fail( onfail );
+
+    jqxhr_phenotype = jqxhr_expression.then( function( ){
+      return ocpu.rpc('format_class_gsea', {
+        filtered_dge : stateMap.filter_rseq_session,
+        de_tested_tt : stateMap.de_test_rseq_session,
+      }, function( data ){
+        //some stoopid GSEA format.
+        var running = String();
+        data.forEach(function( line ){
+          running += line[0] + '\n';
+        });
+        jqueryMap.$emdata_results_files_em_phenotype.append(
+          '<div class="panel panel-success">' +
+            '<div class="panel-heading">' +
+              '<h3 class="panel-title">Phenotype file (.cls)</h3>' +
+            '</div>' +
+            '<div class="panel-body"><pre class="em-code">' + running + '</pre></div>' +
+            '<div class="panel-footer">' +
+              '<a type="button" class="btn btn-default" href="' + util.makeTextFile(running) + '" download="phenotype.cls">Download (.cls)</a>' +
+            '</div>' +
+          '</div>'
+        );
+      });
+    })
+    .done( function(){
+      // util.displayAsTable('Phenotype file (.cls)',
+      //   stateMap.class_gsea_session,
+      //   jqueryMap.$emdata_results_files_em_phenotype,
+      //   null );
+      cb( null );
+    })
+    .fail( onfail );
+
+    return true;
+  };
+
+  /* Fetch and append the various files required for GSEA
+   *
+   * @param $container object the jquery object to append to
+   * @param next function an optional callback
+   *
+   * @return boolean
+   */
+  fetchGSEAFiles = function( $container, next ){
+    var
+    jqxhr,
+    onfail,
+    onDone,
+    cb = next || function(){};
+
+    onDone = function(){
+      util.displayAsTable('Rank File (.rnk)',
       stateMap.rank_gsea_session,
       jqueryMap.$emdata_results_files_gsea,
       null );
-    })
+      jqueryMap.$emdata_gsea_help.text('');
+      cb( false );
+    };
+
+    onfail = function( jqXHR ){
+      var errText = "Server error: " + jqXHR.responseText;
+      console.error(errText);
+      jqueryMap.$emdata_gsea_help.text(errText);
+      cb( true );
+    };
+
+    // filter
+    jqxhr = ocpu.call('format_ranks_gsea', {
+      de_tested_tt : stateMap.de_test_rseq_session
+    }, function( session ){ stateMap.rank_gsea_session = session; })
+    .done( onDone )
     .fail( onfail );
 
     return true;
@@ -124,7 +199,10 @@ var modulename = (function(){
    * @return boolean
    */
   createDataFiles = function( $container ){
-    fetchGSEAFiles( jqueryMap.$emdata_results_files_gsea, function(){} );
+    fetchGSEAFiles( jqueryMap.$emdata_results_files_gsea, function( err ){
+        if( err ){ return false; }
+        fetchEMFiles( jqueryMap.$emdata_results_files_em );
+    });
     return true;
   };
   // ---------- END DOM METHODS ------------------------------------------------
@@ -195,9 +273,6 @@ var modulename = (function(){
     $container.html( configMap.template );
     setJQueryMap( $container );
     jqueryMap.$emdata_clear.click( reset );
-
-    jqueryMap.$emdata_results_progress.find( '.progress-bar' ).toggle( false );
-    jqueryMap.$emdata_results_progress.toggle( false );
 
     stateMap.filter_rseq_session = msg_map.filter_rseq_session;
     stateMap.normalize_rseq_session = msg_map.normalize_rseq_session;

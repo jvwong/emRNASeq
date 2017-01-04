@@ -123,14 +123,14 @@ format_ranks_gsea <- function(de_tested_tt){
   rank_values <- sign(de_tested_tt$table$logFC) * (-1) * log10(de_tested_tt$table$PValue)
   rank_values_max <- max(rank_values[ rank_values != Inf ])
   rank_values_unique <- sapply( rank_values, function(x) replace(x, is.infinite(x), sign(x) * (rank_values_max + runif(1))) )
-  genenames <- noquote(rownames(de_tested_tt$table))
+  genenames <- (rownames(de_tested_tt$table))
 
   ranks_df <- data.frame(gene=genenames,
     rank=rank_values_unique,
     stringsAsFactors = FALSE)
   ordered_ranks_df <- ranks_df[order(ranks_df[,2], decreasing = TRUE), ]
 
-  return(as.data.frame(ordered_ranks_df))
+  return(ordered_ranks_df)
 }
 
 #' Generate an expression text file content

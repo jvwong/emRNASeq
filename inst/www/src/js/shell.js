@@ -72,6 +72,7 @@ var shell = (function(){
    * @param $container (Object) jQuery parent
    */
   initModule = function(path, $container){
+    if(!ocpu){ alert('server error'); return; }
     if(path){
       ocpu.seturl(path);
     }
@@ -79,8 +80,6 @@ var shell = (function(){
     setJQueryMap( $container );
 
     // configure and initialize feature modules
-    munge.configModule({});
-    munge.initModule( jqueryMap.$munge_container );
     $.gevent.subscribe(
       jqueryMap.$process_rseq_container,
       'em-munge-data',
@@ -99,6 +98,9 @@ var shell = (function(){
         emdata.initModule( jqueryMap.$emdata_container, msg_map  );
       }
     );
+
+    munge.configModule({});
+    munge.initModule( jqueryMap.$munge_container );
     // var msg_map = util.deserializeSessionData( localStorage.getItem( 'em-munge-data' ) );
     // process_rseq.configModule({});
     // process_rseq.initModule( jqueryMap.$process_rseq_container, msg_map );

@@ -119,6 +119,7 @@ var process_rseq = (function(){
     onDone = function( n ){
       var $bar = jqueryMap.$em_process_rseq_results_progress.find( '.progress-bar:nth-child(' + n + ')' );
         $bar.toggle( true );
+      jqueryMap.$em_process_rseq_class_help.text('');
     };
 
     onfail = function( jqXHR ){
