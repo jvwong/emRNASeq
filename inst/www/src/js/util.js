@@ -8,6 +8,7 @@ module.exports = (function(){
    serialize,
    deserializeSessionData,
    displayAsPrint,
+   plotR,
    unique;
 
   /* Begin Public method /serialize/
@@ -156,12 +157,61 @@ module.exports = (function(){
   };
   // End Public method /unique/
 
+  /* Begin Public method /plotR/
+   * A convenience wrapper for formatting a plot routine
+   *
+   * @param title string for the panel
+   * @param func string the function to call
+   * @param args object of function parameters
+   * @param $container the jquery object to insert the image
+   * @param cb the optional callback
+   *
+   * @return an array of unique elements
+   */
+  plotR = function( title, func, args, $container, cb ){
+
+    var
+    jqxhr,
+    onfail,
+    onDone,
+    cb = cb instanceof Function ? cb : function(){};
+
+    onDone = function( ){
+      cb ( null );
+    };
+
+    onfail = function( jqXHR ){
+      var errText = "Server error: " + jqXHR.responseText;
+      console.error(errText);
+      cb( true );
+    };
+
+    // filter
+    jqxhr = ocpu.call(func, args, function( session ){
+      var $panel = $('<div class="panel panel-success">' +
+                       '<div class="panel-heading">' +
+                         '<h3 class="panel-title">' + title + '</h3>' +
+                       '</div>' +
+                       '<div class="panel-body">' +
+                        '<img src="" class="img-responsive" alt="Responsive image">' +
+                       '</div>' +
+                     '</div>');
+      var $img = $panel.find('.img-responsive');
+          $img.attr('src', session.getLoc() + 'graphics/1/png' );
+      $container.append($panel);
+    })
+    .done( onDone )
+    .fail( onfail );
+  };
+  // End DOM method /plotR/
+
   return {
     makeError               : makeError,
     setConfigMap            : setConfigMap,
     serialize               : serialize,
     deserializeSessionData  : deserializeSessionData,
     displayAsPrint          : displayAsPrint,
-    unique                  : unique
+    unique                  : unique,
+    plotR                   : plotR
   };
 }());

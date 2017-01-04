@@ -41,7 +41,7 @@ var process_rseq = (function(){
             '<div class="alert alert-info em-process_rseq-results-status status col-sm-offset-4 col-sm-6"></div>' +
           '</div>' +
           '<div class="em-process_rseq-results-normalize"></div>' +
-          '<div class="em-process_rseq-results-deplot"></div>' +          
+          '<div class="em-process_rseq-results-deplot rplot"></div>' +
         '</div>' +
       '</div>',
 
@@ -65,6 +65,7 @@ var process_rseq = (function(){
   processRNASeq,
   onRNASeqProcessed,
   toggleInput,
+  plotR,
   initModule;
   // ---------- END MODULE SCOPE VARIABLES -------------------------------------
 
@@ -140,10 +141,8 @@ var process_rseq = (function(){
     })
     .done( function(){
       onDone('Differential expression testing complete');
-      cb( null,
-        stateMap.filter_rseq_session,
-        stateMap.normalize_rseq_session,
-        stateMap.de_test_rseq_session );
+      toggleInput( 'class', false );
+      cb( null, stateMap.de_test_rseq_session );
     })
     .fail( onfail );
     // test
@@ -175,25 +174,30 @@ var process_rseq = (function(){
         onRNASeqProcessed );
   };
 
-  onRNASeqProcessed = function( err,
-    filter_rseq_session,
-    normalize_rseq_session,
-    de_test_rseq_session ){
 
+
+  onRNASeqProcessed = function( err, de_test_rseq_session ){
     if( err ) { return false; }
+
+    var name, args;
 
     util.displayAsPrint( 'Results',
       de_test_rseq_session,
       jqueryMap.$em_process_rseq_results_normalize );
-    toggleInput( 'class', false );
 
-    jqueryMap.$em_process_rseq_results_deplot.rplot("plot_de", {
-      filtered_dge  : filter_rseq_session,
-      de_tested_tt  : de_test_rseq_session,
-      baseline      : stateMap.baseline_class,
-      test          : stateMap.test_class,
-      threshold     : 0.05
-    }, function( session ){ console.log(session); });
+    name = 'plot_de';
+    args = {
+        filtered_dge  : stateMap.filter_rseq_session,
+        de_tested_tt  : stateMap.de_test_rseq_session,
+        baseline      : stateMap.baseline_class,
+        test          : stateMap.test_class,
+        threshold     : 0.05
+      };
+    util.plotR( 'DE Genes',
+      name,
+      args,
+      jqueryMap.$em_process_rseq_results_deplot,
+      function(){} );
 
     return true;
   };
