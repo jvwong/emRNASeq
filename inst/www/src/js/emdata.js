@@ -198,7 +198,7 @@ var modulename = (function(){
    *
    * @return boolean
    */
-  createDataFiles = function( $container ){
+  createDataFiles = function( ){
     fetchGSEAFiles( jqueryMap.$emdata_results_files_gsea, function( err ){
         if( err ){ return false; }
         fetchEMFiles( jqueryMap.$emdata_results_files_em );
@@ -279,7 +279,7 @@ var modulename = (function(){
     stateMap.de_test_rseq_session = msg_map.de_test_rseq_session;
 
     // do stuff
-    createDataFiles( jqueryMap.$emdata_results );
+    createDataFiles();
   };
   // ---------- END PUBLIC METHODS --------------------------------------------
 

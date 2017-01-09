@@ -74,6 +74,7 @@ var shell = (function(){
   initModule = function(path, $container){
     if(!ocpu){ alert('server error'); return; }
     if(path){
+      console.info('setting path %s', path);
       ocpu.seturl(path);
     }
     $container.html( configMap.template );
