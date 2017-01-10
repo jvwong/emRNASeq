@@ -4,12 +4,12 @@
 \alias{plot_de}
 \title{An M vs. A plot that highlights differentially expressed genes}
 \usage{
-plot_de(de_tested_tt, filtered_dge, baseline, test, threshold = 0.05)
+plot_de(filtered_dge, de_tested_tt, baseline, test, threshold = 0.05)
 }
 \arguments{
-\item{de_tested_tt}{A \code{\link[edgeR]{topTags}}, typically the output of \code{\link{de_test_rseq}}}
-
 \item{filtered_dge}{A \code{\link[edgeR]{DGEList}}, typically the output of \code{\link{filter_rseq}}}
+
+\item{de_tested_tt}{A \code{\link[edgeR]{topTags}}, typically the output of \code{\link{de_test_rseq}}}
 
 \item{baseline}{character array for the 'baseline' class}
 

@@ -13,6 +13,8 @@ LazyData: TRUE
 Depends:
     R (>= 3.2.5)
 Imports:
+    TCGAbiolinks (>= 2.0.13),
+    DEFormats (>= 1.0.2),
     SummarizedExperiment (>= 1.2.3),
     GenomicRanges (>= 1.26.1),
     IRanges	(>= 2.8.1),
