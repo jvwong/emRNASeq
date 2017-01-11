@@ -4,62 +4,34 @@ A nodejs app for the [Pathway Commons Guide](http://pathwaycommons.github.io/gui
 
 ## Getting started
 
-The repository provides a web app.
+Here we provide basic instructions on installing and running the web app situated inside the `./app` directory.
 
 ### Software requirements
 
-- [Docker](https://docs.docker.com/engine/installation/): version > 1.12.3
-- (Optional) [Docker Compose](https://docs.docker.com/compose/): version > 1.9.0
+- [Nodejs](https://nodejs.org/en/): v6.9.1
+- [Bower](https://bower.io/): v1.8.0
+- [Git](https://git-scm.com/): 2.8.4
 
-### Descriptions
+### Running the app
 
-- `docker-compose.yml`: Runs the RStudio container and links to the contents of `src`
-
-### Running the container
-
-1. Run the app
-
-  a. Using Docker
-
-    ```shell
-    $ docker run --rm --tty --volume "$(pwd)/src:/home/pc_workflows" --publish 8787:8787 jvwong/pc_guide_workflows
-    ```
-
-  b. Using Docker Compose
+1. Clone the repository from GitHub and change in the `app` directory.
 
   ```shell
-  $ cd pc_guide_workflows
-  $ docker-compose up
+  $ git clone https://github.com/jvwong/pc_guide_workflows_enrich_custom_app.git
+  $ cd app
   ```
 
-  > Note: A Docker image will be pulled from the DockerHub. It will be run and link the `src` contents inside the container at `/home/pc_workflows`. This means that changes written to `/home/pc_workflows/` by the R scripts will be available, even after the container exits.
-
-3. Point your browser to `127.0.0.1:8787`
-
-4. Use RStudio!
-
-  The username and password are both `rstudio`. In RStudio, the directories declared in `src` will be avilable at `/home/pc_workflows` (click the `...` button in the Files tab).
+2. Install the required dependencies.
 
   ```shell
-  home
-  |
-  |--- pc_workflows
-  |   |
-  |   |--- pathway_enrichment_gdc
-  |   |    |
-  |   |    |--- scripts
-  |   |    |--- output
-  |   |
-  |   |--- src/pathway_enrichment_custom
-  |        |
-  |        |--- scripts
-  |        |--- output
-  |
-  |--- rstudio
-  |   |
-  ...
+  $ npm install
+  $ bower install
   ```
 
-<hr/>
+2. Build and run
 
-## References
+  ```shell
+  $ gulp
+  ```
+
+3. Point your browser to `127.0.0.1:8080`

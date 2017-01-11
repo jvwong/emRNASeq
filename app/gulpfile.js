@@ -143,7 +143,7 @@ gulp.task('browser-sync', ['css',
         baseDir: app_root,
         index: 'index.html'
       },
-      port: '8000',
+      port: '8080',
       middleware: [
         modRewrite([
                     '^/(.*) /$1 [L]' // baseurl un-mapping
