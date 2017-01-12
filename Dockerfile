@@ -6,7 +6,6 @@ WORKDIR /home/nodejs/app
 
 COPY app /home/nodejs/app
 RUN npm install --production
-RUN npm install -g bower && bower install --allow-root
 
 EXPOSE 8080
 USER nodejs
