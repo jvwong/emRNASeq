@@ -5,4 +5,3 @@ gdc*
 !*.R
 GDCData
 .DS_Store
-node_modules/
