@@ -1,0 +1,3 @@
+[submodule "inst/www/pc_guide_workflows_enrich_custom_app"]
+	path = inst/www/pc_guide_workflows_enrich_custom_app
+	url = https://github.com/jvwong/pc_guide_workflows_enrich_custom_app
