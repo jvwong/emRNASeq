@@ -17,6 +17,5 @@ var boot = require('./boot');
  */
 (function(){
   boot.initModule();
-  // shell.initModule( $('#em'), "//localhost:8717/ocpu/library/emRNASeq/R" );
-  shell.initModule($('#em'));
+  shell.initModule( $('#em'), "//localhost:8000/ocpu/library/emRNASeq/R" );  
 }());
