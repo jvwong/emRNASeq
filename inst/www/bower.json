@@ -1,0 +1,28 @@
+{
+  "name": "name",
+  "description": "description",
+  "main": "index.html",
+  "authors": [
+    "author"
+  ],
+  "license": "MIT",
+  "keywords": [],
+  "homepage": "",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "jquery": "^3.1.1",
+    "bootstrap": "^3.3.7",
+    "datatables": "^1.10.13",
+    "datatables.net": "^1.10.13",
+    "datatables.net-bs": "^1.10.13",
+    "opencpu.js": "opencpu#*",
+    "urianchor": "https://github.com/mmikowski/urianchor.git#^1.2.2",
+    "jquery.event.gevent": "https://github.com/mmikowski/jquery.event.gevent.git#^1.0.3"
+  }
+}
