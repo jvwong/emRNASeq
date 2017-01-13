@@ -38,4 +38,4 @@ Run the webapp locally in R/Studio using the single-user [OpenCPU](https://cran.
    > opencpu$browse("/library/emRNASeq/www/pc_guide_workflows_enrich_custom_app-master/app/")
   ```
 
-  > If not automatically opened, point your browser at `localhost:8000/ocpu/library/emRNASeq/www/pc_guide_workflows_enrich_custom_app-master/app/`
+  > If not automatically opened, point your browser at [localhost:8000/ocpu/library/emRNASeq/www/pc_guide_workflows_enrich_custom_app-master/app/](http://localhost:8000/ocpu/library/emRNASeq/www/pc_guide_workflows_enrich_custom_app-master/app/)
