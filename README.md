@@ -17,4 +17,20 @@ Inside R, install the package using devtools
     > library(devtools)
     > devtools::install_github("jvwong/emRNASeq")
 
-That's it!
+### Webapp
+
+Run the webapp locally IN R/Studio using the single-user [OpenCPU](https://cran.r-project.org/web/packages/opencpu/index.html) server.
+
+1. Install and attach the package
+
+```r
+ > install.packages("opencpu")
+ > opencpu$stop()
+ > opencpu$start(8000)
+```
+
+2. Run the app
+
+```r
+ > opencpu$browse("library/") 
+```
