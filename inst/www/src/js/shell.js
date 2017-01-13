@@ -12,6 +12,7 @@ var shell = (function(){
   // ---------- BEGIN MODULE SCOPE VARIABLES -----------------------------------
   var
   configMap = {
+    default_path : '//localhost:8080/R',
     anchor_schema_map : {
       metadata  : { enabled: true, disabled: true },
       data      : { enabled: true, disabled: true }
@@ -71,43 +72,51 @@ var shell = (function(){
    * @param path (String) path
    * @param $container (Object) jQuery parent
    */
-  initModule = function(path, $container){
+  initModule = function( $container, path ){
     if(!ocpu){ alert('server error'); return; }
-    if(path){
-      console.info('setting path %s', path);
-      ocpu.seturl(path);
-    }
-    $container.html( configMap.template );
-    setJQueryMap( $container );
 
-    // configure and initialize feature modules
-    $.gevent.subscribe(
-      jqueryMap.$process_rseq_container,
-      'em-munge-data',
-      function ( event, msg_map ) {
-        localStorage.setItem( 'em-munge-data', util.serialize(msg_map) );
-        process_rseq.configModule({});
-        process_rseq.initModule( jqueryMap.$process_rseq_container, msg_map  );
-      }
-    );
-    $.gevent.subscribe(
-      jqueryMap.$emdata_container,
-      'em-process_rseq',
-      function ( event, msg_map ) {
-        localStorage.setItem( 'em-process_rseq', util.serialize(msg_map) );
-        emdata.configModule({});
-        emdata.initModule( jqueryMap.$emdata_container, msg_map  );
-      }
-    );
+    var jqxhr;
+    path = path || configMap.default_path;
+    jqxhr = ocpu.seturl( path );
+    jqxhr.fail(function(){
+      console.error( 'Could not set server path %s', path );
+      return false;
+    });
 
-    munge.configModule({});
-    munge.initModule( jqueryMap.$munge_container );
-    // var msg_map = util.deserializeSessionData( localStorage.getItem( 'em-munge-data' ) );
-    // process_rseq.configModule({});
-    // process_rseq.initModule( jqueryMap.$process_rseq_container, msg_map );
-    // var msg_map = util.deserializeSessionData( localStorage.getItem( 'em-process_rseq' ) );
-    // emdata.configModule({});
-    // emdata.initModule( jqueryMap.$emdata_container, msg_map  );
+    jqxhr.done(function(){
+      $container.html( configMap.template );
+      setJQueryMap( $container );
+
+      // configure and initialize feature modules
+      $.gevent.subscribe(
+        jqueryMap.$process_rseq_container,
+        'em-munge-data',
+        function ( event, msg_map ) {
+          localStorage.setItem( 'em-munge-data', util.serialize(msg_map) );
+          process_rseq.configModule({});
+          process_rseq.initModule( jqueryMap.$process_rseq_container, msg_map  );
+        }
+      );
+      $.gevent.subscribe(
+        jqueryMap.$emdata_container,
+        'em-process_rseq',
+        function ( event, msg_map ) {
+          localStorage.setItem( 'em-process_rseq', util.serialize(msg_map) );
+          emdata.configModule({});
+          emdata.initModule( jqueryMap.$emdata_container, msg_map  );
+        }
+      );
+
+      munge.configModule({});
+      munge.initModule( jqueryMap.$munge_container );
+      // var msg_map = util.deserializeSessionData( localStorage.getItem( 'em-munge-data' ) );
+      // process_rseq.configModule({});
+      // process_rseq.initModule( jqueryMap.$process_rseq_container, msg_map );
+      // var msg_map = util.deserializeSessionData( localStorage.getItem( 'em-process_rseq' ) );
+      // emdata.configModule({});
+      // emdata.initModule( jqueryMap.$emdata_container, msg_map  );
+      return true;
+    });
 
     return true;
   };
