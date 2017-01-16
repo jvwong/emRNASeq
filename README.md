@@ -1,6 +1,6 @@
 # Pathway Commons Guide - Pathway Enrichment App
 
-A nodejs app for the [Pathway Commons Guide](http://pathwaycommons.github.io/guide/) [pathway enrichment - custom](http://pathwaycommons.github.io/guide/workflows/pathway_enrichment_custom/index/) workflow.
+A nodejs app for the [Pathway Commons Guide](http://pathwaycommons.github.io/guide/) workflow [Pathway Enrichment - II](http://pathwaycommons.github.io/guide/workflows/pathway_enrichment_custom/index/).
 
 ## Getting started
 
@@ -17,7 +17,7 @@ Here we provide basic instructions on installing and running the web app situate
 1. Clone the repository from GitHub and change in the `app` directory.
 
   ```shell
-  $ git clone https://github.com/jvwong/pc_guide_workflows_enrich_custom_app.git
+  $ git clone https://github.com/jvwong/pc_guide_workflows_enrich_ii_app.git
   $ cd app
   ```
 
