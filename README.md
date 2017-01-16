@@ -1,6 +1,6 @@
 # Pathway Commons Guide - Pathway Enrichment App
 
-A nodejs app for the [Pathway Commons Guide](http://pathwaycommons.github.io/guide/) workflow [Pathway Enrichment - II](http://pathwaycommons.github.io/guide/workflows/pathway_enrichment_custom/index/).
+A nodejs app for the [Pathway Commons Guide](http://pathwaycommons.github.io/guide/) workflow [Pathway Enrichment - II](http://pathwaycommons.github.io/guide/workflows/pathway_enrichment_ii/index/).
 
 ## Getting started
 
