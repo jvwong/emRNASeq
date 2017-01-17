@@ -15,6 +15,7 @@ get_gene_model(data_df, species)
 A dataframe of gene attributes
 }
 \description{
-Retrieve the gene info
+This requires that either the mgi_id for mouse or ensembl gene id for human are used.
+This is tough to enforce so must fail elegantly
 }
 

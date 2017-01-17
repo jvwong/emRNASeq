@@ -4,7 +4,7 @@
 \alias{merge_data}
 \title{Merge a set of HT-Seq RNA expression files}
 \usage{
-merge_data(metadata_file, species = NULL, ...)
+merge_data(metadata_file, species, ...)
 }
 \arguments{
 \item{metadata_file}{A metadata file}
@@ -15,10 +15,6 @@ merge_data(metadata_file, species = NULL, ...)
 A \code{\link[SummarizedExperiment]{SummarizedExperiment}}
 }
 \description{
-Source files must be in tab-delimited format with two columns and no header.
-The classes are defined by a meta data file which is a tab-delimited text
-file with headers for the sample read 'id' and 'class'. Each row entry
-is a corresponding filename and class assignment. Only accepts pair-wise
-comparison so there must be exactly 2 classes.
+Daa files must be in tab-delimited format with two columns and no header. WARNING: We expect that ENSEMBL gene ids are used as they are mapped to HGNC symbols since this is what \href{http://download.baderlab.org/EM_Genesets/current_release/}{BaderLab} gene sets use. The classes are defined by a meta data file which is a tab-delimited text file with headers for the sample read 'id' and 'class'. Each row entry is a corresponding filename and class assignment. Only accepts pair-wise comparison so there must be exactly 2 classes.
 }
 

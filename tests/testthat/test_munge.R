@@ -4,18 +4,20 @@ context("metadata munging")
 
 ### merge_data
 data_dir <- file.path(getwd(), "data")
-metadata_file <- file.path(data_dir, "gitr_phenotypes.txt")
-filelist <- c(file.path(data_dir, "SMARTA_GITR_KO_1_htsqct.txt"),
-  file.path(data_dir, "SMARTA_GITR_KO_2_htsqct.txt"),
-  file.path(data_dir, "SMARTA_GITR_KO_3_htsqct.txt"),
-  file.path(data_dir, "SMARTA_GITR_WT_1_htsqct.txt"),
-  file.path(data_dir, "SMARTA_GITR_WT_2_htsqct.txt"),
-  file.path(data_dir, "SMARTA_GITR_WT_3_htsqct.txt"))
-sample_merged_se <- emRNASeq::merge_data(metadata_file, species = NULL, filelist)
-
-test_that("merge_data requires valid params", {
-  expect_error(emRNASeq::merge_data(sample_meta_df, NULL))
-})
+metadata_file <- file.path(data_dir, "tep_phenotypes.txt")
+filelist <- c(file.path(data_dir, "MGH-BrCa-H-75_htsqct.txt"),
+  file.path(data_dir, "MGH-BrCa-H-74_htsqct.txt"),
+  file.path(data_dir, "MGH-BrCa-H-68_htsqct.txt"),
+  file.path(data_dir, "MGH-BrCa-H-66_htsqct.txt"),
+  file.path(data_dir, "MGH-BrCa-H-59_htsqct.txt"),
+  file.path(data_dir, "MGH-BrCa-H-11_htsqct.txt"),
+  file.path(data_dir, "HD-7_htsqct.txt"),
+  file.path(data_dir, "HD-5_htsqct.txt"),
+  file.path(data_dir, "HD-4_htsqct.txt"),
+  file.path(data_dir, "HD-3-1_htsqct.txt"),
+  file.path(data_dir, "HD-2-1_htsqct.txt"),
+  file.path(data_dir, "HD-1_htsqct.txt"))
+sample_merged_se <- emRNASeq::merge_data(metadata_file, species = "human", filelist)
 
 test_that("merge_data produes a SummarizedExperiment", {
   expect_is(sample_merged_se, "SummarizedExperiment")
@@ -23,7 +25,7 @@ test_that("merge_data produes a SummarizedExperiment", {
 
 test_that("merge_data result has data", {
   expect_gt(dim(SummarizedExperiment::assays(sample_merged_se)$counts)[1], 22000)
-  expect_equal(dim(SummarizedExperiment::colData(sample_merged_se)), c(6,1))
+  expect_equal(dim(SummarizedExperiment::colData(sample_merged_se)), c(length(filelist),1))
   expect_gt(dim(SummarizedExperiment::rowData(sample_merged_se))[1], 22000)
 })
 

@@ -7,10 +7,10 @@ sample_merged_se <- readRDS(file = file.path(data_dir, "sample_merged_se.rds"))
 
 ### filter_rseq
 test_that("filter_rseq requires two classes", {
-  expect_error(filter_rseq(sample_merged_se, "WT"))
+  expect_error(filter_rseq(sample_merged_se, "HD"))
 })
 
-sample_filtered_dge <- filter_rseq(sample_merged_se, "WT", "KO")
+sample_filtered_dge <- filter_rseq(sample_merged_se, "HD", "BrCa")
 test_that("filter_rseq requires two classes", {
   expect_is(sample_filtered_dge, "DGEList")
 })
@@ -23,14 +23,14 @@ test_that("normalize_rseq returns a DGEList", {
 
 ### de_test_rseq
 test_that("process_rseq returns a DGEList with correct counts attribute", {
-  expect_equal(dim(tmm_normalized_dge)[2], 6)
+  expect_equal(dim(tmm_normalized_dge)[2], dim(sample_merged_se)[2])
 })
 
 test_that("de_test_rseq requires two classes", {
-  expect_error(de_test_rseq(tmm_normalized_dge, c("WT")))
+  expect_error(de_test_rseq(tmm_normalized_dge, c("HD")))
 })
 
-de_tested_tt <- de_test_rseq(tmm_normalized_dge, "WT", "KO")
+de_tested_tt <- de_test_rseq(tmm_normalized_dge, "HD", "BrCa")
 test_that("de_test_rseq returns a TopTags with correct attributes", {
   expect_gt(dim(de_tested_tt$table)[1], 1)
 })
