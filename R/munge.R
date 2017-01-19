@@ -117,13 +117,12 @@ merge_data <- function(metadata_file, species, source_name, target_name, ...) {
 
   # Create the SummarizedExperiment
   colData <- data.frame(class=meta[class_order,]$class, row.names=colnames(merged_data_df_unique))
-  data_se <- SummarizedExperiment::SummarizedExperiment(
-    assays = list(counts = merged_data_df_unique),
-    rowRanges = gene_model_unique_target[ match(rownames(merged_data_df_unique), names(gene_model_unique_target)), ],
-    colData=colData)
+  gene_model_unique_target_reorder <- gene_model_unique_target[ match(rownames(merged_data_df_unique), names(gene_model_unique_target)), ]
 
-#   # Set the row names to the desired namespace
-#   rownames(data_se) <- SummarizedExperiment::rowData(data_se)[["hgnc_symbol"]]
+  data_se <- SummarizedExperiment::SummarizedExperiment(
+    assays = list(counts = data.matrix(merged_data_df_unique)),
+    # rowRanges = gene_model_unique_target_reorder,
+    colData=colData)
 
   return(data_se)
 }
