@@ -28,17 +28,21 @@ create_meta <- function(metadata_file) {
 }
 
 
-#' Merge a set of HT-Seq RNA expression files
+#' Merge a set of files representing RNA sequencing gene counts
 #'
-#' Daa files must be in tab-delimited format with two columns and no header. WARNING: We expect that ENSEMBL gene ids are used as they are mapped to HGNC symbols since this is what \href{http://download.baderlab.org/EM_Genesets/current_release/}{BaderLab} gene sets use. The classes are defined by a meta data file which is a tab-delimited text file with headers for the sample read 'id' and 'class'. Each row entry is a corresponding filename and class assignment. Only accepts pair-wise comparison so there must be exactly 2 classes.
+#' 1. Default parameter is do nothing (already matching gene set ids)
+#' 2. Optional parameter is to map from input to target namespace
+#' Data files must be in tab-delimited format with two columns and no header. The classes are defined by a meta data file which is a tab-delimited text file with headers for the sample read 'id' and 'class'. Each row entry is a corresponding filename and class assignment. Only accepts pair-wise comparison so there must be exactly 2 classes.
 #'
 #' @param metadata_file A metadata file
 #' @param species A character array indicating the species with which to fetch gene models from bioMart, If NULL this mapping will not be performed
+#' @param source_name attribute (gene namespace) input
+#' @param target_name attribute (gene namespace) desired
 #'
 #' @return A \code{\link[SummarizedExperiment]{SummarizedExperiment}}
 #'
 #' @export
-merge_data <- function(metadata_file, species, ...) {
+merge_data <- function(metadata_file, species, source_name, target_name, ...) {
 
   if(!is.character(species)) stop('species must be of class character')
 
@@ -58,6 +62,10 @@ merge_data <- function(metadata_file, species, ...) {
     if(!file.exists(file)) stop('invalid file/directory')
 
     fname <- basename(file)
+    findex <- which(meta$id == fname)
+
+    if(length(findex) == 0) stop(paste0('Could not find match in metadata for ', fname))
+
     class_order <- append(class_order, which(meta$id == fname))
 
     input_df <- read.table(file,
@@ -83,17 +91,39 @@ merge_data <- function(metadata_file, species, ...) {
     i = i + 1
   }
 
-  gene_model <- get_gene_model(data_df, species)
-  if(is.null(gene_model)) stop('Could not reliably map input gene ids')
+  # Clean up the rowRanges object
+  gene_model <- get_gene_model( data_df, species, source_name, target_name )
+  if(is.null(gene_model)) stop( 'Could not reliably map input gene ids' )
+  # Filter gene_model for valid target_name
+  subset_gene_model_target <- gene_model[GenomicRanges::mcols( gene_model )[[target_name]] != ""]
+  indices_gene_model_unique_target <- !duplicated(GenomicRanges::mcols( subset_gene_model_target )[[target_name]])
+  gene_model_unique_target <- subset_gene_model_target[indices_gene_model_unique_target,]
 
-  common_names <- intersect(rownames(data_df), names(gene_model))
-  indices_data_df <- match(common_names, rownames(data_df))
-  subsetted_data_df <- data_df[indices_data_df,]
-  colData <- data.frame(class=meta[class_order,]$class, row.names=colnames(subsetted_data_df))
+  # Clean up the count data frame
+  # Filter data_df for source_name
+  indices_data_df_source <- rownames( data_df ) %in% GenomicRanges::mcols( subset_gene_model_target )[[source_name]]
+  subset_data_df_source <- data_df[ indices_data_df_source, ]
+  # Filter data_df for valid target_name
+  merged_data_df <- merge( subset_data_df_source,
+    GenomicRanges::mcols( subset_gene_model_target ),
+    by.x = "row.names", by.y = source_name)
+  # Gotcha - Remove duplicates
+  indices_merged_unique_target <- !duplicated(merged_data_df[[ target_name ]])
+  merged_data_df_unique <- merged_data_df[indices_merged_unique_target,]
+  # Set row names to target_name
+  row.names( merged_data_df_unique ) <- merged_data_df_unique[[ target_name ]]
+  # Drop all name columns
+  merged_data_df_unique <- merged_data_df_unique[, -which(names(merged_data_df_unique) %in% c("Row.names", target_name)) ]
+
+  # Create the SummarizedExperiment
+  colData <- data.frame(class=meta[class_order,]$class, row.names=colnames(merged_data_df_unique))
   data_se <- SummarizedExperiment::SummarizedExperiment(
-    assays = list(counts = data.matrix(subsetted_data_df)),
-    rowRanges = gene_model,
+    assays = list(counts = merged_data_df_unique),
+    rowRanges = gene_model_unique_target[ match(rownames(merged_data_df_unique), names(gene_model_unique_target)), ],
     colData=colData)
+
+#   # Set the row names to the desired namespace
+#   rownames(data_se) <- SummarizedExperiment::rowData(data_se)[["hgnc_symbol"]]
 
   return(data_se)
 }
@@ -106,68 +136,44 @@ merge_data <- function(metadata_file, species, ...) {
 #'
 #' @param data_df the data frame of genes (rownames) and samples (colnames)
 #' @param species the species (mouse, human)
+#' @param source_name attribute (gene namespace) input
+#' @param target_name attribute (gene namespace) desired
+#'
 #' @return A dataframe of gene attributes
 #'
 #' @export
-get_gene_model <- function(data_df, species){
+get_gene_model <- function( data_df, species,
+  source_name, target_name ){
 
   if(missing(species) ||
       !grepl("mouse", species, ignore.case = TRUE) &&
       !grepl("human", species, ignore.case = TRUE)) stop("Species must be human or mouse")
+
   dataset = switch(species,
     mouse = "mmusculus_gene_ensembl",
     human = "hsapiens_gene_ensembl")
-
   mart_used = biomaRt::useMart("ENSEMBL_MART_ENSEMBL")
   ensembl = biomaRt::useDataset(dataset, mart = mart_used)
+  attributes_available <- biomaRt::listAttributes(ensembl)
 
-  if(species == "mouse"){
-      bm_info <- biomaRt::getBM(attributes = c('mgi_symbol',
-        'chromosome_name', 'start_position', 'end_position', 'strand',
-        'ensembl_gene_id',
-        'mgi_id', 'mgi_description'),
-        filters = 'mgi_symbol',
-        values = rownames(data_df),
-        mart = ensembl)
+  if( !source_name %in% attributes_available$name ||
+      !target_name %in% attributes_available$name ) stop("Invalid source/target name")
 
-      common <- intersect(rownames(data_df), bm_info$mgi_symbol)
-      indices_bm_info <- match(common, bm_info$mgi_symbol)
-      bm_info_merged <- bm_info[indices_bm_info, ]
+  bm_info <- biomaRt::getBM(attributes = c("chromosome_name",
+    "start_position", "end_position", "strand",
+    source_name, target_name),
+    filters = source_name,
+    values = rownames(data_df),
+    mart = ensembl)
 
-      rowRanges <- GenomicRanges::GRanges(seqnames = paste0("chr", bm_info_merged$chromosome_name),
-        ranges = IRanges::IRanges(start = bm_info_merged$start_position,
-          end = bm_info_merged$end_position),
-        strand = bm_info_merged$strand,
-        ensembl_gene_id = bm_info_merged$ensembl_gene_id,
-        mgi_id = bm_info_merged$mgi_id,
-        mgi_description = bm_info_merged$mgi_description,
-        mgi_symbol = bm_info_merged$mgi_symbol)
+  rowRanges <- GenomicRanges::GRanges(seqnames = paste0("chr", bm_info$chromosome_name),
+    ranges = IRanges::IRanges(start = bm_info$start_position, end = bm_info$end_position),
+    strand = bm_info$strand)
 
-      names(rowRanges) <- as.character(bm_info_merged$mgi_symbol)
-  } else if(species == "human") {
-    bm_info <- biomaRt::getBM(attributes = c('chromosome_name',
-      'start_position',
-      'end_position',
-      'strand',
-      'ensembl_gene_id',
-      'hgnc_symbol'),
-      filters = 'ensembl_gene_id',
-      values = rownames(data_df),
-      mart = ensembl)
-
-    common <- intersect(rownames(data_df), bm_info$ensembl_gene_id)
-    indices_bm_info <- match(common, bm_info$ensembl_gene_id)
-    bm_info_merged <- bm_info[indices_bm_info, ]
-
-    rowRanges <- GenomicRanges::GRanges(seqnames = paste0("chr", bm_info_merged$chromosome_name),
-      ranges = IRanges::IRanges(start = bm_info_merged$start_position,
-        end = bm_info_merged$end_position),
-      strand = bm_info_merged$strand,
-      ensembl_gene_id = bm_info_merged$ensembl_gene_id,
-      hgnc_symbol = bm_info_merged$hgnc_symbol)
-
-    names(rowRanges) <- as.character(bm_info_merged$ensembl_gene_id)
-  }
+  meta <- data.frame(bm_info[[source_name]], bm_info[[target_name]])
+  colnames(meta) <- c(source_name, target_name)
+  GenomicRanges::mcols(rowRanges) <- meta
+  names(rowRanges) <- bm_info[[target_name]]
 
   return(rowRanges)
 }

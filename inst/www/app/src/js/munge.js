@@ -35,7 +35,7 @@ var munge = (function(){
             '<div class="em-munge-species row">' +
               '<label for="em-munge-species-input" class="col-sm-2 col-form-label">Species &nbsp</label>' +
               '<div class="col-sm-10">' +
-                '<input type="text" class="form-control" placeholder="e.g. \'mouse\' (optional)">' +
+                '<input type="text" class="form-control" placeholder="e.g. \'mouse\' or \'human\'">' +
                 '<p><small class="help-block"></small></p>' +
               '</div>' +
             '</div>' +
@@ -114,7 +114,7 @@ var munge = (function(){
     var jqxhr = ocpu.call('create_meta', {
       metadata_file : stateMap.metadata_file
     }, function(session){
-      stateMap.metadata_session = session;    
+      stateMap.metadata_session = session;
     });
 
     jqxhr.done(function(){
@@ -148,6 +148,13 @@ var munge = (function(){
     if( !stateMap.metadata_file ){
       alert('Please load metadata.');
       return;
+    }
+
+    // THis is required
+    if( !data.species ){
+      alert('Species must be set to \'human\' or \'mouse\'');
+      cb( true );
+      return false;
     }
 
     stateMap.data_files = data.files;

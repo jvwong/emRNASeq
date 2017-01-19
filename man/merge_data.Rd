@@ -2,19 +2,25 @@
 % Please edit documentation in R/munge.R
 \name{merge_data}
 \alias{merge_data}
-\title{Merge a set of HT-Seq RNA expression files}
+\title{Merge a set of files representing RNA sequencing gene counts}
 \usage{
-merge_data(metadata_file, species, ...)
+merge_data(metadata_file, species, source_name, target_name, ...)
 }
 \arguments{
 \item{metadata_file}{A metadata file}
 
 \item{species}{A character array indicating the species with which to fetch gene models from bioMart, If NULL this mapping will not be performed}
+
+\item{source_name}{attribute (gene namespace) input}
+
+\item{target_name}{attribute (gene namespace) desired}
 }
 \value{
 A \code{\link[SummarizedExperiment]{SummarizedExperiment}}
 }
 \description{
-Daa files must be in tab-delimited format with two columns and no header. WARNING: We expect that ENSEMBL gene ids are used as they are mapped to HGNC symbols since this is what \href{http://download.baderlab.org/EM_Genesets/current_release/}{BaderLab} gene sets use. The classes are defined by a meta data file which is a tab-delimited text file with headers for the sample read 'id' and 'class'. Each row entry is a corresponding filename and class assignment. Only accepts pair-wise comparison so there must be exactly 2 classes.
+1. Default parameter is do nothing (already matching gene set ids)
+2. Optional parameter is to map from input to target namespace
+Data files must be in tab-delimited format with two columns and no header. The classes are defined by a meta data file which is a tab-delimited text file with headers for the sample read 'id' and 'class'. Each row entry is a corresponding filename and class assignment. Only accepts pair-wise comparison so there must be exactly 2 classes.
 }
 

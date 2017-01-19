@@ -4,12 +4,16 @@
 \alias{get_gene_model}
 \title{Retrieve the gene info}
 \usage{
-get_gene_model(data_df, species)
+get_gene_model(data_df, species, source_name, target_name)
 }
 \arguments{
 \item{data_df}{the data frame of genes (rownames) and samples (colnames)}
 
 \item{species}{the species (mouse, human)}
+
+\item{source_name}{attribute (gene namespace) input}
+
+\item{target_name}{attribute (gene namespace) desired}
 }
 \value{
 A dataframe of gene attributes
