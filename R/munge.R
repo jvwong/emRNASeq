@@ -121,7 +121,7 @@ merge_data <- function(metadata_file, species, source_name, target_name, ...) {
 
   data_se <- SummarizedExperiment::SummarizedExperiment(
     assays = list(counts = data.matrix(merged_data_df_unique)),
-    # rowRanges = gene_model_unique_target_reorder,
+    rowRanges = gene_model_unique_target_reorder,
     colData=colData)
 
   return(data_se)
@@ -141,8 +141,7 @@ merge_data <- function(metadata_file, species, source_name, target_name, ...) {
 #' @return A dataframe of gene attributes
 #'
 #' @export
-get_gene_model <- function( data_df, species,
-  source_name, target_name ){
+get_gene_model <- function( data_df, species, source_name, target_name ){
 
   if(missing(species) ||
       !grepl("mouse", species, ignore.case = TRUE) &&
@@ -169,8 +168,13 @@ get_gene_model <- function( data_df, species,
     ranges = IRanges::IRanges(start = bm_info$start_position, end = bm_info$end_position),
     strand = bm_info$strand)
 
-  meta <- data.frame(bm_info[[source_name]], bm_info[[target_name]])
-  colnames(meta) <- c(source_name, target_name)
+  meta <- data.frame(bm_info[[source_name]])
+  colnames(meta) <- c(source_name)
+
+  if(source_name != target_name){
+    meta[target_name] <- data.frame(bm_info[[target_name]])
+    colnames(meta) <- c( colnames(meta), target_name )
+  }
   GenomicRanges::mcols(rowRanges) <- meta
   names(rowRanges) <- bm_info[[target_name]]
 

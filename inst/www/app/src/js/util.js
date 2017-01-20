@@ -195,10 +195,10 @@ module.exports = (function(){
                             '<ul class="dropdown-menu">' +
                               '<li><a href="' + session.getLoc() + 'R/.val/json' + '" download>JSON</a></li>' +
                               '<li><a href="' + session.getLoc() + 'R/.val/csv' + '" download>CSV</a></li>' +
-                              '<li><a href="' + session.getLoc() + 'R/.val/tab' + '" download>TAB</a></li>' +
+                              '<li><a href="' + session.getLoc() + 'R/.val/tab' + '" download="file.txt">TAB</a></li>' +
                               '<li><a href="' + session.getLoc() + 'R/.val/md' + '" download>MD</a></li>' +
                               '<li role="separator" class="divider"></li>' +
-                              '<li><a href="' + session.getLoc() + 'R/.val/rds" download>RDS</a></li>' +
+                              '<li><a href="' + session.getLoc() + 'R/.val/rds" download="file.rds">RDS</a></li>' +
                             '</ul>' +
                           '</div>' +
                         '</div>' +
