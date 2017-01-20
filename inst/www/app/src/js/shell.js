@@ -90,24 +90,24 @@ var shell = (function(){
         process_rseq.initModule( jqueryMap.$process_rseq_container, msg_map  );
       }
     );
-    $.gevent.subscribe(
-      jqueryMap.$emdata_container,
-      'em-process_rseq',
-      function ( event, msg_map ) {
-        localStorage.setItem( 'em-process_rseq', util.serialize(msg_map) );
-        emdata.configModule({});
-        emdata.initModule( jqueryMap.$emdata_container, msg_map  );
-      }
-    );
+    // $.gevent.subscribe(
+    //   jqueryMap.$emdata_container,
+    //   'em-process_rseq',
+    //   function ( event, msg_map ) {
+    //     localStorage.setItem( 'em-process_rseq', util.serialize(msg_map) );
+    //     emdata.configModule({});
+    //     emdata.initModule( jqueryMap.$emdata_container, msg_map  );
+    //   }
+    // );
 
-    munge.configModule({});
-    munge.initModule( jqueryMap.$munge_container );
+    // munge.configModule({});
+    // munge.initModule( jqueryMap.$munge_container );
     // var msg_map = util.deserializeSessionData( localStorage.getItem( 'em-munge-data' ) );
     // process_rseq.configModule({});
     // process_rseq.initModule( jqueryMap.$process_rseq_container, msg_map );
-    // var msg_map = util.deserializeSessionData( localStorage.getItem( 'em-process_rseq' ) );
-    // emdata.configModule({});
-    // emdata.initModule( jqueryMap.$emdata_container, msg_map  );
+    var msg_map = util.deserializeSessionData( localStorage.getItem( 'em-process_rseq' ) );
+    emdata.configModule({});
+    emdata.initModule( jqueryMap.$emdata_container, msg_map  );
 
     return true;
   };

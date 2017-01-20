@@ -17,36 +17,58 @@ var munge = (function(){
         '</div>' +
         '<hr/>' +
         '<form>' +
-          '<fieldset class="form-group">' +
+          '<fieldset class="form-group em-munge-metadata">' +
             '<legend>Metadata Input</legend>' +
-            '<div class="em-munge-meta row">' +
-              '<label class="col-sm-2 col-form-label">File</label>' +
-              '<div class="col-sm-10">' +
-                '<label class="btn btn-primary btn-file btn-md btn-block" for="em-munge-meta-input">Select</label>' +
-                '<input type="file" class="form-control-file" style="display: none;" id="em-munge-meta-input" />' +
-                '<p><small class="help-block"></small></p>' +
+            '<div class="em-munge-metadata-file row">' +
+              '<label class="col-sm-3 col-form-label">Metadata File</label>' +
+              '<div class="col-sm-9">' +
+                '<label class="btn btn-primary btn-file btn-md btn-block" for="em-munge-metadata-input">Select</label>' +
+                '<input type="file" class="form-control-file" style="display: none;" id="em-munge-metadata-input" />' +
               '</div>' +
             '</div>' +
-            '<div class="form-group em-munge-meta-results"></div>' +
+            '<div><small class="help-block"></small></div>' +
+            '<div class="form-group em-munge-metadata-results"></div>' +
           '</fieldset>' +
 
-          '<fieldset class="form-group">' +
+          '<fieldset class="form-group em-munge-data">' +
             '<legend>Data Input</legend>' +
-            '<div class="em-munge-species row">' +
-              '<label for="em-munge-species-input" class="col-sm-2 col-form-label">Species &nbsp</label>' +
-              '<div class="col-sm-10">' +
-                '<input type="text" class="form-control" placeholder="e.g. \'mouse\' or \'human\'">' +
-                '<p><small class="help-block"></small></p>' +
+            '<div class="em-munge-data-species row">' +
+              '<label class="col-sm-3 col-form-label">Species &nbsp</label>' +
+              '<div class="col-sm-9">' +
+                '<select class="selectpicker form-control" data-style="btn-default">' +
+                  '<option>human</option>' +
+                  '<option>mouse</option>' +
+                '</select>' +
               '</div>' +
             '</div>' +
-            '<div class="em-munge-data row">' +
-              '<label class="col-sm-2 col-form-label">File</label>' +
-              '<div class="col-sm-10">' +
-                '<label class="btn btn-primary btn-file btn-md btn-block" for="em-munge-data-input">Select</label>' +
-                '<input type="file" class="form-control-file" style="display: none;" id="em-munge-data-input" disabled multiple />' +
-                '<p><small class="help-block"></small></p>' +
+            '<div class="em-munge-data-source_name row">' +
+              '<label class="col-sm-3 col-form-label">Source Namespace</label>' +
+              '<div class="col-sm-9">' +
+                '<select class="selectpicker form-control" data-style="btn-default">' +
+                  '<option>ensembl_gene_id</option>' +
+                  '<option>hgnc_symbol</option>' +
+                  '<option>mgi_symbol</option>' +
+                '</select>' +
               '</div>' +
             '</div>' +
+            '<div class="em-munge-data-target_name row">' +
+              '<label class="col-sm-3 col-form-label">Target Namespace</label>' +
+              '<div class="col-sm-9">' +
+                '<select class="selectpicker form-control" data-style="btn-default">' +
+                  '<option>hgnc_symbol</option>' +
+                  '<option>ensembl_id</option>' +
+                  '<option>mgi_symbol</option>' +
+                '</select>' +
+              '</div>' +
+            '</div>' +
+            '<div class="em-munge-data-file row">' +
+              '<label class="col-sm-3 col-form-label">Data Files</label>' +
+              '<div class="col-sm-9">' +
+                '<label class="btn btn-primary btn-file btn-md btn-block" for="em-munge-data-file">Select</label>' +
+                '<input type="file" class="form-control-file" style="display: none;" id="em-munge-data-file" multiple />' +
+              '</div>' +
+            '</div>' +
+            '<div><small class="help-block"></small></div>' +
             '<div class="form-group em-munge-data-results"></div>' +
           '</fieldset>' +
         '</form>' +
@@ -85,18 +107,22 @@ var munge = (function(){
   // Begin DOM method /setJQueryMap/
   setJQueryMap = function( $container ){
     jqueryMap = {
-      $container                : $container,
-      $munge                    : $container.find('.em-munge'),
-      $munge_clear              : $container.find('.em-munge .em-munge-clear'),
-      $munge_metadata_input     : $container.find('.em-munge .em-munge-meta input'),
-      $munge_metadata_label     : $container.find('.em-munge .em-munge-meta label'),
-      $munge_metadata_help      : $container.find('.em-munge .em-munge-meta .help-block'),
-      $munge_metadata_results   : $container.find('.em-munge .em-munge-meta-results'),
-      $munge_spec_input         : $container.find('.em-munge .em-munge-species input'),
-      $munge_data_input         : $container.find('.em-munge .em-munge-data input'),
-      $munge_data_label         : $container.find('.em-munge .em-munge-data label'),
-      $munge_data_help          : $container.find('.em-munge .em-munge-data .help-block'),
-      $munge_data_results       : $container.find('.em-munge .em-munge-data-results')
+      $container                          : $container,
+      $munge                              : $container.find('.em-munge'),
+      $munge_clear                        : $container.find('.em-munge .em-munge-clear'),
+
+      $munge_metadata_fieldset            : $container.find('.em-munge fieldset.em-munge-metadata'),
+      $munge_metadata_file_input          : $container.find('.em-munge .em-munge-metadata .em-munge-metadata-file #em-munge-metadata-input'),
+      $munge_metadata_help                : $container.find('.em-munge .em-munge-metadata .help-block'),
+      $munge_metadata_results             : $container.find('.em-munge .em-munge-metadata .em-munge-metadata-results'),
+
+      $munge_data_fieldset                : $container.find('.em-munge fieldset.em-munge-data'),
+      $munge_data_species_select          : $container.find('.em-munge .em-munge-data .em-munge-data-species .selectpicker'),
+      $munge_data_source_name_select      : $container.find('.em-munge .em-munge-data .em-munge-data-source_name .selectpicker'),
+      $munge_data_target_name_select      : $container.find('.em-munge .em-munge-data .em-munge-data-target_name .selectpicker'),
+      $munge_data_file                    : $container.find('.em-munge .em-munge-data .em-munge-data-file input'),
+      $munge_data_help                    : $container.find('.em-munge .em-munge-data .help-block'),
+      $munge_data_results                 : $container.find('.em-munge .em-munge-data-results')
     };
   };
   // End DOM method /setJQueryMap/
@@ -119,8 +145,8 @@ var munge = (function(){
 
     jqxhr.done(function(){
       //clear any previous help messages
-      jqueryMap.$munge_metadata_help.text( stateMap.metadata_file.name );
-      cb( null, stateMap.metadata_session );
+      jqueryMap.$munge_metadata_help.text('');
+      cb( null, stateMap.metadata_session, stateMap.metadata_file.name );
     });
 
     jqxhr.fail(function(){
@@ -162,7 +188,9 @@ var munge = (function(){
     // opencpu only accepts single files as arguments
     var args = {
       metadata_file   : stateMap.metadata_file,
-      species         : data.species
+      species         : data.species,
+      source_name     : data.source_name,
+      target_name     : data.target_name
     };
 
     // loop through files
@@ -209,9 +237,9 @@ var munge = (function(){
     return processMetaFile( data, onMetadataProcessed );
   };
 
-  onMetadataProcessed = function( err, session ){
+  onMetadataProcessed = function( err, session, fname ){
     if( err ) { return false; }
-    util.displayAsTable('Results',
+    util.displayAsTable(fname,
       session,
       jqueryMap.$munge_metadata_results,
       function( err ){
@@ -224,8 +252,10 @@ var munge = (function(){
   onDataFilesChange = function(){
     var self = $(this),
     data = {
-      files   : self[0].files,
-      species : jqueryMap.$munge_spec_input.val().trim().toLowerCase() || null
+      files       : self[0].files,
+      species     : jqueryMap.$munge_data_species_select.val().trim().toLowerCase() || null,
+      source_name : jqueryMap.$munge_data_source_name_select.val().trim().toLowerCase(),
+      target_name : jqueryMap.$munge_data_target_name_select.val().trim().toLowerCase()
     };
     return processDataFiles( data, onDataProcessed );
   };
@@ -263,17 +293,13 @@ var munge = (function(){
    * @return boolean
    */
   toggleInput = function( label, do_enable ) {
-    var $handles = label === 'data' ?
-      [ jqueryMap.$munge_data_label,
-        jqueryMap.$munge_data_input,
-        jqueryMap.$munge_spec_input ] :
-      [ jqueryMap.$munge_metadata_label,
-        jqueryMap.$munge_metadata_input ];
 
-    $.each( $handles, function( index, value ){
-      value.attr('disabled', !do_enable );
-      value.attr('disabled', !do_enable );
-    });
+    if ( label === 'data' ) {
+      jqueryMap.$munge_data_fieldset.attr( 'disabled', !do_enable );
+      jqueryMap.$munge_data_species_select.selectpicker('refresh');
+    } else {
+      jqueryMap.$munge_metadata_fieldset.attr( 'disabled', !do_enable );
+    }
 
     return true;
   };
@@ -286,11 +312,11 @@ var munge = (function(){
    */
   reset = function( ) {
     // Must do this manually
-    jqueryMap.$munge_metadata_input.val("");
+    jqueryMap.$munge_metadata_file_input.val("");
     jqueryMap.$munge_metadata_help.text(configMap.default_metadata_help);
     jqueryMap.$munge_metadata_results.empty();
-    jqueryMap.$munge_spec_input.val("");
-    jqueryMap.$munge_data_input.val("");
+    jqueryMap.$munge_data_species_select.val("");
+    jqueryMap.$munge_data_file.val("");
     jqueryMap.$munge_data_help.text(configMap.default_data_help);
     jqueryMap.$munge_data_results.empty();
 
@@ -336,13 +362,11 @@ var munge = (function(){
 
     $container.html( configMap.template );
     setJQueryMap( $container );
-
     jqueryMap.$munge_metadata_help.text( configMap.default_metadata_help );
     jqueryMap.$munge_data_help.text( configMap.default_data_help );
-
     // bind file change HANDLERS
-    jqueryMap.$munge_metadata_input.change( onMetaFileChange );
-    jqueryMap.$munge_data_input.change( onDataFilesChange );
+    jqueryMap.$munge_metadata_file_input.change( onMetaFileChange );
+    jqueryMap.$munge_data_file.change( onDataFilesChange );
     toggleInput( 'metadata', true );
     toggleInput( 'data', false );
 

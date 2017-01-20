@@ -152,7 +152,7 @@ format_expression_gsea <- function(normalized_dge){
     check.names = FALSE)
 
   rownames(cpm_mat) <- NULL
-  expression_df <- data.frame(meta_df, cpm_mat)
+  expression_df <- data.frame(meta_df, cpm_mat,  check.names = FALSE)
 
   return(expression_df)
 }
