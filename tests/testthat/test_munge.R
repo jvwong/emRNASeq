@@ -67,7 +67,7 @@ test_that("get_gene_model produes a GRanges", {
 })
 
 test_that("get_gene_model sets the correct metadata columns", {
-  expect_equal(names(GenomicRanges::mcols(gene_model)), c(source_name, target_name))
+  expect_equal(names(GenomicRanges::mcols(gene_model)), c(source_name))
 })
 
 test_that("get_gene_model sets the correct names", {

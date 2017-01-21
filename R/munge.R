@@ -91,54 +91,72 @@ merge_data <- function(metadata_file, species, source_name, target_name, ...) {
     i = i + 1
   }
 
-  # Clean up the rowRanges object
   gene_model <- get_gene_model( data_df, species, source_name, target_name )
   if(is.null(gene_model)) stop( 'Could not reliably map input gene ids' )
-  # Filter gene_model for valid target_name
-  subset_gene_model_target <- gene_model[GenomicRanges::mcols( gene_model )[[target_name]] != ""]
-  indices_gene_model_unique_target <- !duplicated(GenomicRanges::mcols( subset_gene_model_target )[[target_name]])
-  gene_model_unique_target <- subset_gene_model_target[indices_gene_model_unique_target,]
 
-  # Clean up the count data frame
-  # Filter data_df for source_name
-  indices_data_df_source <- rownames( data_df ) %in% GenomicRanges::mcols( subset_gene_model_target )[[source_name]]
-  subset_data_df_source <- data_df[ indices_data_df_source, ]
-  # Filter data_df for valid target_name
-  merged_data_df <- merge( subset_data_df_source,
-    GenomicRanges::mcols( subset_gene_model_target ),
-    by.x = "row.names", by.y = source_name)
-  # Gotcha - Remove duplicates
-  indices_merged_unique_target <- !duplicated(merged_data_df[[ target_name ]])
-  merged_data_df_unique <- merged_data_df[indices_merged_unique_target,]
-  # Set row names to target_name
-  row.names( merged_data_df_unique ) <- merged_data_df_unique[[ target_name ]]
-  # Drop all name columns
-  merged_data_df_unique <- merged_data_df_unique[, -which(names(merged_data_df_unique) %in% c("Row.names", target_name)) ]
+  # Sync up data rows (name, order) with gene_model returned
+  data_df_mapped <- map_names(data_df, gene_model, source_name)
 
   # Create the SummarizedExperiment
-  colData <- data.frame(class=meta[class_order,]$class, row.names=colnames(merged_data_df_unique))
-  gene_model_unique_target_reorder <- gene_model_unique_target[ match(rownames(merged_data_df_unique), names(gene_model_unique_target)), ]
+  colData <- data.frame(class=meta[class_order,]$class, row.names=colnames(data_df_mapped))
 
   data_se <- SummarizedExperiment::SummarizedExperiment(
-    assays = list(counts = data.matrix(merged_data_df_unique)),
-    rowRanges = gene_model_unique_target_reorder,
+    assays = list(counts = data.matrix(data_df_mapped)),
+    rowRanges = gene_model,
     colData=colData)
 
   return(data_se)
 }
 
+#' Normalize the data.frame nameswith those on a \code{\link[GenomicRanges]{GRanges}} object
+#'
+#' !!!!!!!!!!!!Alert alert alert ---- mapping between namespaces is not bijective.!!!!!!!!!!!!!
+#'
+#' Assumes that the gene_model has a meta-data column with source_name
+#'
+#' @param data_df the data frame to synchronize
+#' @param gene_model the \code{\link[GenomicRanges]{GRanges}} object to match rows with
+#'
+#' @return A \code{\link[base]{data.frame}} with the same rows and names as the input \code{\link[GenomicRanges]{GRanges}}
+#'
+#' @export
+map_names <- function(data_df, gene_model, source_name){
+
+  # Filter data_df for source_name
+  indices_data_df_source <- rownames( data_df ) %in% GenomicRanges::mcols( gene_model )[[source_name]]
+  subset_data_df_source <- data_df[ indices_data_df_source, ]
+
+  # Recreate the data frame
+  merged_data_df <- merge( subset_data_df_source,
+    data.frame( GenomicRanges::mcols( gene_model ), target_name = names(gene_model) ),
+    by.x = "row.names", by.y = source_name)
+
+  # merged data could still have duplicates!
+  # indices_merged_data_df_unique <- !duplicated(merged_data_df[[ "Row.names" ]])
+  # merged_data_df_unique <- merged_data_df[indices_merged_data_df_unique,]
+
+  # Set row names to target_name
+  row.names( merged_data_df ) <- merged_data_df$target_name
+  # Drop name columns
+  merged_data_df <- merged_data_df[, -which(names(merged_data_df) %in% c("Row.names", "target_name")) ]
+
+  # Reorder the rows to match
+  merged_data_df_reordered <- merged_data_df[ match(names(gene_model), rownames(merged_data_df)), ]
+
+  return(merged_data_df_reordered)
+}
+
 
 #' Retrieve the gene info
 #'
-#' This requires that either the mgi_id for mouse or ensembl gene id for human are used.
-#' This is tough to enforce so must fail elegantly
+#'  !!!!!!!!!!!!Alert alert alert ---- mapping between namespaces is not bijective.!!!!!!!!!!!!!
 #'
 #' @param data_df the data frame of genes (rownames) and samples (colnames)
 #' @param species the species (mouse, human)
 #' @param source_name attribute (gene namespace) input
 #' @param target_name attribute (gene namespace) desired
 #'
-#' @return A dataframe of gene attributes
+#' @return A \code{\link[GenomicRanges]{GRanges}} having unique and valid target_name entries
 #'
 #' @export
 get_gene_model <- function( data_df, species, source_name, target_name ){
@@ -170,13 +188,15 @@ get_gene_model <- function( data_df, species, source_name, target_name ){
 
   meta <- data.frame(bm_info[[source_name]])
   colnames(meta) <- c(source_name)
-
-  if(source_name != target_name){
-    meta[target_name] <- data.frame(bm_info[[target_name]])
-    colnames(meta) <- c( colnames(meta), target_name )
-  }
   GenomicRanges::mcols(rowRanges) <- meta
+
   names(rowRanges) <- bm_info[[target_name]]
 
-  return(rowRanges)
+  # Filter gene_model for valid target_name
+  # GRanges objects act like vectors for subsetting
+  gene_model <- rowRanges[ (names(rowRanges) != "") ]
+  gene_model <- gene_model[ !duplicated(GenomicRanges::mcols(gene_model)[[source_name]]) ]
+  gene_model <- gene_model[ !duplicated(names(gene_model)) ]
+
+  return(gene_model)
 }

@@ -16,10 +16,10 @@ get_gene_model(data_df, species, source_name, target_name)
 \item{target_name}{attribute (gene namespace) desired}
 }
 \value{
-A dataframe of gene attributes
+A \code{\link[GenomicRanges]{GRanges}} having unique and valid target_name entries
 }
 \description{
 This requires that either the mgi_id for mouse or ensembl gene id for human are used.
-This is tough to enforce so must fail elegantly
+This is tough to enforce so must fail elegantly. Thus returns a row
 }
 
