@@ -50,7 +50,7 @@ var getBrowserified = function( opts ){
     fullPaths: true,
     bundleExternal: true,
     entries: [
-      path.join(src_root, 'js/main.js'),
+      path.join(src_root, 'js/main.js')
     ]
   }, opts );
 
